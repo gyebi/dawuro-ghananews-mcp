@@ -1,0 +1,13 @@
+
+[project]
+name = "backend-mobile"
+version = "0.1.0"
+description = "Dawuro Ghana News API backend"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "fastapi>=0.136.1",
+    "requests>=2.34.2",
+    "uvicorn>=0.47.0",
+]
