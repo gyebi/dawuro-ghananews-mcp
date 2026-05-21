@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
   Image,
-  Linking,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -12,81 +11,92 @@ import {
   TextInput,
   View,
 } from "react-native";
-
-const API_BASE_URL = "http://192.168.254.141:8000";
-
-type Story = {
-  title: string;
-  url: string;
-  source: string;
-};
+import { getStories, type Story } from "@/lib/stories";
 
 export default function HomeScreen() {
+  const [allStories, setAllStories] = useState<Story[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedSource, setSelectedSource] = useState("citi");
+  const [selectedSource, setSelectedSource] = useState("all");
 
-  async function fetchSourceNews(source: string) {
+  async function loadStories() {
     try {
       setLoading(true);
-      setSelectedSource(source);
-
-      const response = await fetch(
-        `${API_BASE_URL}/news/source/${source}?limit=10`
-      );
-
-      const data = await response.json();
-      setStories(data.stories || []);
+      const data = await getStories();
+      setAllStories(data);
+      setStories(data);
     } catch (error) {
-      console.log("Failed to fetch news:", error);
+      console.log("Failed to load stories:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function searchNews() {
-    if (!query.trim()) {
+  function filterBySource(source: string) {
+    setSelectedSource(source);
+
+    if (source === "all") {
+      setStories(allStories);
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const response = await fetch(
-        `${API_BASE_URL}/news/search?query=${encodeURIComponent(
-          query
-        )}&limit=10`
-      );
-
-      const data = await response.json();
-      setStories(data.stories || []);
-    } catch (error) {
-      console.log("Failed to search news:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function searchTopic(topic: string) {
-  try {
-    setLoading(true);
-
-    const response = await fetch(
-      `${API_BASE_URL}/news/search?query=${encodeURIComponent(topic)}&limit=10`
+    setStories(
+      allStories.filter(
+        (story) => story.source.toLowerCase() === source.toLowerCase()
+      )
     );
-
-    const data = await response.json();
-    setStories(data.stories || []);
-  } catch (error) {
-    console.log("Failed to search topic:", error);
-  } finally {
-    setLoading(false);
   }
-}
+
+  function searchNews() {
+    if (!query.trim()) {
+      setStories(
+        selectedSource === "all"
+          ? allStories
+          : allStories.filter(
+              (story) =>
+                story.source.toLowerCase() === selectedSource.toLowerCase()
+            )
+      );
+      return;
+    }
+
+    const searchTerm = query.trim().toLowerCase();
+
+    setStories(
+      allStories.filter((story) => {
+        const matchesSource =
+          selectedSource === "all" ||
+          story.source.toLowerCase() === selectedSource.toLowerCase();
+        const matchesSearch = [
+          story.title,
+          story.summary,
+          story.category,
+          story.source,
+        ]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(searchTerm));
+
+        return matchesSource && matchesSearch;
+      })
+    );
+  }
+
+  function searchTopic(topic: string) {
+    setQuery(topic);
+    const topicLower = topic.toLowerCase();
+
+    setStories(
+      allStories.filter((story) =>
+        [story.title, story.summary, story.category, story.source]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(topicLower))
+      )
+    );
+  }
 
   useEffect(() => {
-    fetchSourceNews("citi");
+    loadStories();
   }, []);
 
   return (
@@ -119,10 +129,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.sources}>
-        {["citi", "myjoy", "graphic"].map((source) => (
+        {["all", "citi", "myjoy", "graphic"].map((source) => (
           <Pressable
             key={source}
-            onPress={() => fetchSourceNews(source)}
+            onPress={() => filterBySource(source)}
             style={[
               styles.sourceChip,
               selectedSource === source && styles.sourceChipActive,
@@ -150,10 +160,7 @@ export default function HomeScreen() {
         <Pressable
           key={topic}
           style={styles.topicChip}
-          onPress={() => {
-            setQuery(topic);
-            searchTopic(topic);
-          }}
+          onPress={() => searchTopic(topic)}
         >
           <Text style={styles.topicChipText}>{topic}</Text>
         </Pressable>
@@ -169,28 +176,51 @@ export default function HomeScreen() {
         <FlatList
           data={stories}
           refreshing={loading}
-          onRefresh={() => fetchSourceNews(selectedSource)}
-          keyExtractor={(item, index) => `${item.url}-${index}`}
+          onRefresh={loadStories}
+          keyExtractor={(item, index) => item.id || `${item.url}-${index}`}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.card}
-              onPress={() => 
-  router.push({
-    pathname: "/story",
-    params: {
-      title: item.title,
-      url: item.url,
-      source: item.source,
-    },
-  })
-}
-            >
-              <Text style={styles.cardSource}>{item.source.toUpperCase()}</Text>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardLink}>Read story →</Text>
-            </Pressable>
-          )}
+          renderItem={({ item }) => {
+            const cardContent = (
+              <>
+                <Text style={styles.category}>{item.category ?? "News"}</Text>
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.summary}>{item.summary ?? item.title}</Text>
+                <Text style={styles.source}>{item.source}</Text>
+              </>
+            );
+
+            if (item.id) {
+              return (
+                <Link
+                  href={{
+                    pathname: "/story/[id]",
+                    params: { id: item.id },
+                  }}
+                  asChild
+                >
+                  <Pressable style={styles.card}>{cardContent}</Pressable>
+                </Link>
+              );
+            }
+
+            return (
+              <Pressable
+                style={styles.card}
+                onPress={() =>
+                  router.push({
+                    pathname: "/story",
+                    params: {
+                      title: item.title,
+                      url: item.url ?? "",
+                      source: item.source,
+                    },
+                  })
+                }
+              >
+                {cardContent}
+              </Pressable>
+            );
+          }}
         />
       )}
     </SafeAreaView>
@@ -298,6 +328,30 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: "#006B3F",
     fontWeight: "700",
+  },
+  category: {
+    color: "#CE1126",
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  title: {
+    color: "#111827",
+    fontSize: 17,
+    fontWeight: "700",
+    lineHeight: 24,
+  },
+  summary: {
+    color: "#4B5563",
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 8,
+  },
+  source: {
+    color: "#006B3F",
+    fontWeight: "700",
+    marginTop: 12,
   },
   emptyText: {
     color: "#6B7280",

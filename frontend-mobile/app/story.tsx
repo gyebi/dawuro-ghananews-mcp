@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
+import { saveStoryForLater } from "@/lib/stories";
 
 export default function StoryScreen() {
   const params = useLocalSearchParams();
@@ -15,6 +16,22 @@ export default function StoryScreen() {
   const title = String(params.title || "");
   const source = String(params.source || "");
   const url = String(params.url || "");
+
+  async function handleSaveStory() {
+    try {
+      await saveStoryForLater({
+        title,
+        summary: title,
+        source,
+        category: "News",
+        url,
+      });
+      alert("Story saved!");
+    } catch (error) {
+      console.log("Save story error:", error);
+      alert("Could not save story.");
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -25,6 +42,10 @@ export default function StoryScreen() {
       <View style={styles.card}>
         <Text style={styles.source}>{source.toUpperCase()}</Text>
         <Text style={styles.title}>{title}</Text>
+
+        <Pressable style={styles.saveButton} onPress={handleSaveStory}>
+          <Text style={styles.saveButtonText}>Save Story</Text>
+        </Pressable>
 
         <Pressable
           style={styles.readButton}
@@ -83,6 +104,18 @@ const styles = StyleSheet.create({
     marginTop: 28,
     borderWidth: 2,
     borderColor: "#FCD116",
+  },
+  saveButton: {
+    backgroundColor: "#FCD116",
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 28,
+  },
+  saveButtonText: {
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "900",
   },
   readButtonText: {
     color: "#FFFFFF",
