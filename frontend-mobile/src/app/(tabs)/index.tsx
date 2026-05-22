@@ -12,7 +12,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "@/constants/colors";
 import { getStories, type Story } from "@/lib/stories";
+
+const quickTopics = ["All", "Politics", "Business", "Sports", "Education", "Health", "Entertainment"];
+const searchableStoryFields = ["title", "summary", "category", "source"] as const;
 
 export default function HomeScreen() {
   const { refresh } = useLocalSearchParams<{ refresh?: string }>();
@@ -35,38 +39,29 @@ export default function HomeScreen() {
   }
 
   function searchNews() {
-    if (!query.trim()) {
+    filterStories(query);
+  }
+
+  function filterStories(filter: string) {
+    const filterTerm = filter.trim().toLowerCase();
+
+    if (!filterTerm || filterTerm === "all") {
       setStories(allStories);
       return;
     }
 
-    const searchTerm = query.trim().toLowerCase();
-
     setStories(
-      allStories.filter((story) => {
-        return [
-          story.title,
-          story.summary,
-          story.category,
-          story.source,
-        ]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(searchTerm));
-      })
+      allStories.filter((story) =>
+        searchableStoryFields.some((field) =>
+          story[field]?.toLowerCase().includes(filterTerm)
+        )
+      )
     );
   }
 
   function searchTopic(topic: string) {
-    setQuery(topic);
-    const topicLower = topic.toLowerCase();
-
-    setStories(
-      allStories.filter((story) =>
-        [story.title, story.summary, story.category, story.source]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(topicLower))
-      )
-    );
+    setQuery(topic === "All" ? "" : topic);
+    filterStories(topic);
   }
 
   useEffect(() => {
@@ -92,7 +87,13 @@ export default function HomeScreen() {
           />
           <View>
             <Text style={styles.logo}>Dawuro</Text>
-            <Text style={styles.subtitle}>Ghana news, announced.</Text>
+            <View style={styles.subtitleRow}>
+              <Image
+                source={require("../../../assets/images/ghana-wordmark.png")}
+                style={styles.ghanaWordmark}
+              />
+              <Text style={styles.subtitle}> news, announced.</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -103,7 +104,7 @@ export default function HomeScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Search Ghana news"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={Colors.textMuted}
             style={styles.searchInput}
             onSubmitEditing={searchNews}
             returnKeyType="search"
@@ -120,17 +121,16 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.topics}
           >
-            {["Politics", "Business", "Sports", "Education", "Health", "Entertainment"].map(
-              (topic) => (
-                <Pressable
-                  key={topic}
-                  style={styles.topicChip}
-                  onPress={() => searchTopic(topic)}
-                >
-                  <Text style={styles.topicChipText}>{topic}</Text>
-                </Pressable>
-              )
-            )}
+            {quickTopics.map((topic) => (
+              <Pressable
+                key={topic}
+                style={styles.topicChip}
+                onPress={() => searchTopic(topic)}
+              >
+                <View style={styles.topicChipGloss} />
+                <Text style={styles.topicChipText}>{topic}</Text>
+              </Pressable>
+            ))}
           </ScrollView>
         </View>
       </View>
@@ -197,7 +197,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFDF7",
+    backgroundColor: Colors.background,
     paddingHorizontal: 18,
   },
   header: {
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   date: {
-    color: "#6B7280",
+    color: Colors.textMuted,
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 4,
@@ -214,31 +214,42 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#111827",
+    color: Colors.text,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    lineHeight: 20,
+    color: Colors.textMuted,
+  },
+  subtitleRow: {
+    alignItems: "flex-end",
+    flexDirection: "row",
     marginTop: 4,
+  },
+  ghanaWordmark: {
+    height: 19,
+    width: 64,
+    marginBottom: 1,
+    resizeMode: "contain",
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: Colors.surfaceMuted,
     borderRadius: 14,
     padding: 5,
     borderWidth: 1,
-    borderColor: "#E6E8EC",
+    borderColor: Colors.borderMuted,
   },
   searchInput: {
     flex: 1,
     paddingHorizontal: 12,
     minHeight: 42,
     fontSize: 15,
-    color: "#111827",
+    color: Colors.text,
   },
   searchButton: {
-    backgroundColor: "#006B3F",
+    backgroundColor: Colors.brand.green,
     borderRadius: 10,
     minHeight: 42,
     minWidth: 54,
@@ -246,12 +257,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   searchButtonText: {
-    color: "#FFFFFF",
+    color: Colors.white,
     fontWeight: "800",
   },
   controls: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7EB",
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
     borderRadius: 18,
     borderWidth: 1,
     marginBottom: 16,
@@ -260,7 +271,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#111827",
+    color: Colors.text,
     marginBottom: 10,
   },
   loader: {
@@ -270,56 +281,56 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.surface,
     borderRadius: 18,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: Colors.border,
   },
   cardSource: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#CE1126",
+    color: Colors.brand.red,
     marginBottom: 8,
   },
   cardTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#111827",
+    color: Colors.text,
     lineHeight: 24,
   },
   cardLink: {
     marginTop: 12,
-    color: "#006B3F",
+    color: Colors.brand.green,
     fontWeight: "700",
   },
   category: {
-    color: "#CE1126",
+    color: Colors.brand.red,
     fontSize: 12,
     fontWeight: "800",
     marginBottom: 8,
     textTransform: "uppercase",
   },
   title: {
-    color: "#111827",
+    color: Colors.text,
     fontSize: 17,
     fontWeight: "700",
     lineHeight: 24,
   },
   summary: {
-    color: "#4B5563",
+    color: Colors.summary,
     fontSize: 14,
     lineHeight: 21,
     marginTop: 8,
   },
   source: {
-    color: "#006B3F",
+    color: Colors.brand.green,
     fontWeight: "700",
     marginTop: 12,
   },
   emptyText: {
-    color: "#6B7280",
+    color: Colors.textMuted,
     marginTop: 30,
     textAlign: "center",
   },
@@ -330,7 +341,7 @@ const styles = StyleSheet.create({
   topicTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#6B7280",
+    color: Colors.textMuted,
     marginBottom: 8,
     textTransform: "uppercase",
   },
@@ -340,17 +351,29 @@ const styles = StyleSheet.create({
     paddingRight: 2,
   },
   topicChip: {
-    backgroundColor: "#FFF8D8",
+    backgroundColor: Colors.brand.gold,
     borderRadius: 999,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    minHeight: 28,
+    overflow: "hidden",
+    paddingVertical: 6,
+    paddingHorizontal: 11,
     borderWidth: 1,
-    borderColor: "#F3D36B",
+    borderColor: Colors.topicGoldBorder,
+  },
+  topicChipGloss: {
+    backgroundColor: "rgba(255, 255, 255, 0.38)",
+    borderTopLeftRadius: 999,
+    borderTopRightRadius: 999,
+    height: "48%",
+    left: 1,
+    position: "absolute",
+    right: 1,
+    top: 1,
   },
   topicChipText: {
-    color: "#111827",
+    color: Colors.text,
     fontWeight: "700",
-    fontSize: 13,
+    fontSize: 12,
   },
   logoRow: {
     flexDirection: "row",
@@ -358,8 +381,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logoImage: {
-    width: 84,
-    height: 84,
+    width: 109,
+    height: 109,
     borderRadius: 18,
     resizeMode: "contain",
   },

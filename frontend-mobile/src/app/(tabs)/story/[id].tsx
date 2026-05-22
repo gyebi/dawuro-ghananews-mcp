@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { getStoryById, saveStoryForLater, type Story } from "@/lib/stories";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "@/constants/colors";
 import { FacebookIcon } from "@/icons/facebook-icon";
 import { InstagramIcon } from "@/icons/instagram-icon";
 import { WhatsappIcon } from "@/icons/whatsapp-icon";
@@ -129,12 +130,12 @@ export default function StoryDetailScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.surfaceCool,
   },
 
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Colors.surfaceCool,
   },
   content: {
     paddingHorizontal: 22,
@@ -143,69 +144,69 @@ const styles = StyleSheet.create({
   },
   loading: {
     padding: 22,
-    color: "#64748B",
+    color: Colors.textSoft,
     fontSize: 16,
   },
   category: {
-    color: "#F5B942",
+    color: Colors.brand.gold,
     fontSize: 13,
     fontWeight: "900",
     textTransform: "uppercase",
     marginBottom: 12,
   },
   title: {
-    color: "#0B1220",
+    color: Colors.textStrong,
     fontSize: 30,
     lineHeight: 38,
     fontWeight: "900",
     marginBottom: 14,
   },
   source: {
-    color: "#64748B",
+    color: Colors.textSoft,
     fontSize: 14,
     fontWeight: "700",
     marginBottom: 24,
   },
   summary: {
-    color: "#334155",
+    color: Colors.body,
     fontSize: 18,
     lineHeight: 29,
   },
   button: {
-    backgroundColor: "#0B1220",
+    backgroundColor: Colors.textStrong,
     padding: 16,
     borderRadius: 16,
     marginTop: 28,
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: Colors.white,
     fontWeight: "900",
     fontSize: 15,
   },
 
   saveButton: {
-    backgroundColor: "#F5B942",
+    backgroundColor: Colors.brand.gold,
     padding: 16,
     borderRadius: 16,
     marginTop: 28,
     alignItems: "center",
   },
   saveButtonText: {
-    color: "#0B1220",
+    color: Colors.textStrong,
     fontWeight: "900",
     fontSize: 15,
   },
   shareSection: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E2E8F0",
+    backgroundColor: Colors.surface,
+    borderColor: Colors.borderCool,
     borderWidth: 1,
     padding: 14,
     borderRadius: 16,
     marginTop: 12,
   },
   shareTitle: {
-    color: "#64748B",
+    color: Colors.textSoft,
     fontWeight: "900",
     fontSize: 13,
     marginBottom: 12,
@@ -217,8 +218,8 @@ const styles = StyleSheet.create({
   },
   shareIconButton: {
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderColor: "#E2E8F0",
+    backgroundColor: Colors.surfaceCool,
+    borderColor: Colors.borderCool,
     borderRadius: 14,
     borderWidth: 1,
     height: 48,

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BackIcon } from "@/icons/back-icon";
+import { Colors } from "@/constants/colors";
 import { RefreshIcon } from "@/icons/refresh-icon";
 
 export default function TabLayout() {
@@ -14,15 +15,15 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#006B3F",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarActiveTintColor: Colors.brand.green,
+        tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "800",
         },
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E7EB",
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
           height: 64 + insets.bottom,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingTop: 8,
@@ -121,8 +122,8 @@ function StoryHeader() {
 const styles = StyleSheet.create({
   storyHeader: {
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderBottomColor: "#E5E7EB",
+    backgroundColor: Colors.surfaceCool,
+    borderBottomColor: Colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     minHeight: 86,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     minWidth: 64,
   },
   storyHeaderTitle: {
-    color: "#0B1220",
+    color: Colors.textStrong,
     flex: 1,
     fontSize: 18,
     fontWeight: "900",

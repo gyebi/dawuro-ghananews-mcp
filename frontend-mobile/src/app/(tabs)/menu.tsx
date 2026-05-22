@@ -1,4 +1,5 @@
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Colors } from "@/constants/colors";
 
 const menuItems = ["Manage sources", "Notifications", "About Dawuro", "Privacy policy"];
 
@@ -22,31 +23,31 @@ export default function MenuScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFDF7",
+    backgroundColor: Colors.background,
   },
   content: {
     padding: 22,
   },
   title: {
-    color: "#111827",
+    color: Colors.text,
     fontSize: 28,
     fontWeight: "900",
     marginBottom: 16,
   },
   list: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7EB",
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
   },
   row: {
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Colors.border,
     borderBottomWidth: 1,
     padding: 16,
   },
   rowText: {
-    color: "#111827",
+    color: Colors.text,
     fontSize: 15,
     fontWeight: "800",
   },
