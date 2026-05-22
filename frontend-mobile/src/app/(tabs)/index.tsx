@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Link, router } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
   Image,
   Pressable,
-  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { getStories, type Story } from "@/lib/stories";
 
 export default function HomeScreen() {
+  const { refresh } = useLocalSearchParams<{ refresh?: string }>();
   const [allStories, setAllStories] = useState<Story[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedSource, setSelectedSource] = useState("all");
 
   async function loadStories() {
     try {
@@ -33,31 +34,9 @@ export default function HomeScreen() {
     }
   }
 
-  function filterBySource(source: string) {
-    setSelectedSource(source);
-
-    if (source === "all") {
-      setStories(allStories);
-      return;
-    }
-
-    setStories(
-      allStories.filter(
-        (story) => story.source.toLowerCase() === source.toLowerCase()
-      )
-    );
-  }
-
   function searchNews() {
     if (!query.trim()) {
-      setStories(
-        selectedSource === "all"
-          ? allStories
-          : allStories.filter(
-              (story) =>
-                story.source.toLowerCase() === selectedSource.toLowerCase()
-            )
-      );
+      setStories(allStories);
       return;
     }
 
@@ -65,10 +44,7 @@ export default function HomeScreen() {
 
     setStories(
       allStories.filter((story) => {
-        const matchesSource =
-          selectedSource === "all" ||
-          story.source.toLowerCase() === selectedSource.toLowerCase();
-        const matchesSearch = [
+        return [
           story.title,
           story.summary,
           story.category,
@@ -76,8 +52,6 @@ export default function HomeScreen() {
         ]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(searchTerm));
-
-        return matchesSource && matchesSearch;
       })
     );
   }
@@ -97,78 +71,71 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadStories();
-  }, []);
+  }, [refresh]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      
-  <View style={styles.header}>
-  <View style={styles.logoRow}>
-   <Image
-      source={require("../../assets/images/dawuro-logo.png")}
-      style={styles.logoImage}
-    />
-  <View>
-      <Text style={styles.logo}>Dawuro</Text>
-       <Text style={styles.subtitle}>Ghana news, announced.</Text>
-    </View>
-  </View>
-</View>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <Text style={styles.date}>
+        {new Date().toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}
+      </Text>
 
-      <View style={styles.searchBox}>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search Ghana news..."
-          style={styles.searchInput}
-          onSubmitEditing={searchNews}
-        />
-        <Pressable style={styles.searchButton} onPress={searchNews}>
-          <Text style={styles.searchButtonText}>Search</Text>
-        </Pressable>
+      <View style={styles.header}>
+        <View style={styles.logoRow}>
+          <Image
+            source={require("../../../assets/images/dawuro-logo.png")}
+            style={styles.logoImage}
+          />
+          <View>
+            <Text style={styles.logo}>Dawuro</Text>
+            <Text style={styles.subtitle}>Ghana news, announced.</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.sources}>
-        {["all", "citi", "myjoy", "graphic"].map((source) => (
-          <Pressable
-            key={source}
-            onPress={() => filterBySource(source)}
-            style={[
-              styles.sourceChip,
-              selectedSource === source && styles.sourceChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.sourceChipText,
-                selectedSource === source && styles.sourceChipTextActive,
-              ]}
-            >
-              {source.toUpperCase()}
-            </Text>
+      <View style={styles.controls}>
+        <View style={styles.searchBox}>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search Ghana news"
+            placeholderTextColor="#9CA3AF"
+            style={styles.searchInput}
+            onSubmitEditing={searchNews}
+            returnKeyType="search"
+          />
+          <Pressable style={styles.searchButton} onPress={searchNews}>
+            <Text style={styles.searchButtonText}>Go</Text>
           </Pressable>
-        ))}
-      </View>
-      <Text style={styles.sectionTitle}>Latest Stories</Text>
+        </View>
 
         <View style={styles.topicSection}>
           <Text style={styles.topicTitle}>Quick Topics</Text>
-
-          <View style={styles.topics}>
-    {["Politics", "Business", "Sports", "Education", "Health", "Entertainment"].map(
-      (topic) => (
-        <Pressable
-          key={topic}
-          style={styles.topicChip}
-          onPress={() => searchTopic(topic)}
-        >
-          <Text style={styles.topicChipText}>{topic}</Text>
-        </Pressable>
-      )
-    )}
-  </View>
-
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.topics}
+          >
+            {["Politics", "Business", "Sports", "Education", "Health", "Entertainment"].map(
+              (topic) => (
+                <Pressable
+                  key={topic}
+                  style={styles.topicChip}
+                  onPress={() => searchTopic(topic)}
+                >
+                  <Text style={styles.topicChipText}>{topic}</Text>
+                </Pressable>
+              )
+            )}
+          </ScrollView>
         </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Latest Stories</Text>
 
       {loading ? (
         <ActivityIndicator size="large" style={styles.loader} />
@@ -234,8 +201,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   header: {
-    paddingTop: 30,
-    paddingBottom: 18,
+    paddingTop: 10,
+    paddingBottom: 14,
+  },
+  date: {
+    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 4,
+    marginTop: 8,
   },
   logo: {
     fontSize: 36,
@@ -249,48 +223,39 @@ const styles = StyleSheet.create({
   },
   searchBox: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 8,
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 14,
+    padding: 5,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 16,
+    borderColor: "#E6E8EC",
   },
   searchInput: {
     flex: 1,
     paddingHorizontal: 12,
+    minHeight: 42,
     fontSize: 15,
+    color: "#111827",
   },
   searchButton: {
     backgroundColor: "#006B3F",
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 10,
+    minHeight: 42,
+    minWidth: 54,
+    alignItems: "center",
     justifyContent: "center",
   },
   searchButtonText: {
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontWeight: "800",
   },
-  sources: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 18,
-  },
-  sourceChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    backgroundColor: "#F3F4F6",
-  },
-  sourceChipActive: {
-    backgroundColor: "#FCD116",
-  },
-  sourceChipText: {
-    fontWeight: "700",
-    color: "#374151",
-  },
-  sourceChipTextActive: {
-    color: "#111827",
+  controls: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 10,
   },
   sectionTitle: {
     fontSize: 20,
@@ -360,57 +325,42 @@ const styles = StyleSheet.create({
   },
 
   topicSection: {
-  marginBottom: 18,
-},
-topicTitle: {
-  fontSize: 16,
-  fontWeight: "800",
-  color: "#111827",
-  marginBottom: 10,
-},
-topics: {
-  flexDirection: "row",
-  flexWrap: "wrap",
-  gap: 8,
-},
-topicChip: {
-  backgroundColor: "#FFF7D6",
-  borderRadius: 999,
-  paddingVertical: 8,
-  paddingHorizontal: 13,
-  borderWidth: 1,
-  borderColor: "#FCD116",
-},
-topicChipText: {
-  color: "#111827",
-  fontWeight: "700",
-},
-
-logoRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 12,
-},
-logoImage: {
-  width: 70,
-  height: 70,
-  borderRadius: 18,
-  resizeMode: "contain",
-},
-logoIcon: {
-  width: 52,
-  height: 52,
-  borderRadius: 18,
-  backgroundColor: "#006B3F",
-  alignItems: "center",
-  justifyContent: "center",
-  borderWidth: 3,
-  borderColor: "#FCD116",
-},
-logoIconText: {
-  color: "#FFFFFF",
-  fontSize: 26,
-  fontWeight: "900",
-},
-
+    marginTop: 12,
+  },
+  topicTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#6B7280",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  topics: {
+    flexDirection: "row",
+    gap: 7,
+    paddingRight: 2,
+  },
+  topicChip: {
+    backgroundColor: "#FFF8D8",
+    borderRadius: 999,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#F3D36B",
+  },
+  topicChipText: {
+    color: "#111827",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  logoImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 18,
+    resizeMode: "contain",
+  },
 });

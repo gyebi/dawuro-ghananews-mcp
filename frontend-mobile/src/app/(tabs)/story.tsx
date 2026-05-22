@@ -3,12 +3,17 @@ import {
   Linking,
   Pressable,
   SafeAreaView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveStoryForLater } from "@/lib/stories";
+import { FacebookIcon } from "@/icons/facebook-icon";
+import { InstagramIcon } from "@/icons/instagram-icon";
+import { WhatsappIcon } from "@/icons/whatsapp-icon";
+import { XIcon } from "@/icons/x-icon";
 
 export default function StoryScreen() {
   const params = useLocalSearchParams();
@@ -33,6 +38,17 @@ export default function StoryScreen() {
     }
   }
 
+  async function handleShareStory() {
+    try {
+      await Share.share({
+        message: `${title}\n\nRead more: ${url || "Dawuro"}`,
+      });
+    } catch (error) {
+      console.log("Share story error:", error);
+      alert("Could not share story.");
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
@@ -46,6 +62,24 @@ export default function StoryScreen() {
         <Pressable style={styles.saveButton} onPress={handleSaveStory}>
           <Text style={styles.saveButtonText}>Save Story</Text>
         </Pressable>
+
+        <View style={styles.shareSection}>
+          <Text style={styles.shareTitle}>Share story</Text>
+          <View style={styles.shareIcons}>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <FacebookIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <WhatsappIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <XIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <InstagramIcon />
+            </Pressable>
+          </View>
+        </View>
 
         <Pressable
           style={styles.readButton}
@@ -116,6 +150,35 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontSize: 16,
     fontWeight: "900",
+  },
+  shareSection: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 14,
+  },
+  shareTitle: {
+    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 12,
+    textTransform: "uppercase",
+  },
+  shareIcons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  shareIconButton: {
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    borderWidth: 1,
+    height: 48,
+    justifyContent: "center",
+    width: 48,
   },
   readButtonText: {
     color: "#FFFFFF",

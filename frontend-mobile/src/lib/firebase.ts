@@ -13,6 +13,18 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+const missingFirebaseConfig = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingFirebaseConfig.length > 0) {
+  throw new Error(
+    `Missing Firebase config: ${missingFirebaseConfig.join(
+      ", "
+    )}. Add these values to frontend-mobile/.env.`
+  );
+}
+
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);

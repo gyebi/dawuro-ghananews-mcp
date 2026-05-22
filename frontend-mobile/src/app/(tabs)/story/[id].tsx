@@ -6,9 +6,15 @@ import {
   Share,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { getStoryById, saveStoryForLater, type Story } from "@/lib/stories";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { FacebookIcon } from "@/icons/facebook-icon";
+import { InstagramIcon } from "@/icons/instagram-icon";
+import { WhatsappIcon } from "@/icons/whatsapp-icon";
+import { XIcon } from "@/icons/x-icon";
 
 export default function StoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,28 +56,44 @@ export default function StoryDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
-      <Text style={styles.category}>{story.category}</Text>
-      <Text style={styles.title}>{story.title}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+        <Text style={styles.category}>{story.category}</Text>
+        <Text style={styles.title}>{story.title}</Text>
 
-      <Text style={styles.source}>{story.source}</Text>
+        <Text style={styles.source}>{story.source}</Text>
 
-      <Text style={styles.summary}>{story.summary}</Text>
+        <Text style={styles.summary}>{story.summary}</Text>
 
-      <Pressable style={styles.saveButton} onPress={handleSaveStory}>
-        <Text style={styles.saveButtonText}>Save Story</Text>
-      </Pressable>
-
-      <Pressable style={styles.shareButton} onPress={handleShareStory}>
-        <Text style={styles.shareButtonText}>Share Story</Text>
-      </Pressable>
-
-      {story.url ? (
-        <Pressable style={styles.button} onPress={() => Linking.openURL(story.url!)}>
-          <Text style={styles.buttonText}>Read Original Article</Text>
+        <Pressable style={styles.saveButton} onPress={handleSaveStory}>
+          <Text style={styles.saveButtonText}>Save Story</Text>
         </Pressable>
-      ) : null}
-    </ScrollView>
+
+        <View style={styles.shareSection}>
+          <Text style={styles.shareTitle}>Share story</Text>
+          <View style={styles.shareIcons}>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <FacebookIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <WhatsappIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <XIcon />
+            </Pressable>
+            <Pressable style={styles.shareIconButton} onPress={handleShareStory}>
+              <InstagramIcon />
+            </Pressable>
+          </View>
+        </View>
+
+        {story.url ? (
+          <Pressable style={styles.button} onPress={() => Linking.openURL(story.url!)}>
+            <Text style={styles.buttonText}>Read Original Article</Text>
+          </Pressable>
+        ) : null}
+      </ScrollView>
+    </SafeAreaView>
   );
 
 
@@ -109,8 +131,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
   },
+
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
   content: {
-    padding: 22,
+    paddingHorizontal: 22,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   loading: {
     padding: 22,
@@ -167,19 +196,34 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     fontSize: 15,
   },
-  shareButton: {
+  shareSection: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#0B1220",
+    borderColor: "#E2E8F0",
     borderWidth: 1,
-    padding: 16,
+    padding: 14,
     borderRadius: 16,
     marginTop: 12,
-    alignItems: "center",
   },
-  shareButtonText: {
-    color: "#0B1220",
+  shareTitle: {
+    color: "#64748B",
     fontWeight: "900",
-    fontSize: 15,
+    fontSize: 13,
+    marginBottom: 12,
+    textTransform: "uppercase",
+  },
+  shareIcons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  shareIconButton: {
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    borderWidth: 1,
+    height: 48,
+    justifyContent: "center",
+    width: 48,
   },
 
 });
