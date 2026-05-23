@@ -18,6 +18,45 @@ import { getStories, type Story } from "@/lib/stories";
 const quickTopics = ["All", "Politics", "Business", "Sports", "Education", "Health", "Entertainment"];
 const searchableStoryFields = ["title", "summary", "category", "source"] as const;
 
+function getStoryDate(value: unknown): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (
+    typeof value === "object" &&
+    "toDate" in value &&
+    typeof value.toDate === "function"
+  ) {
+    return value.toDate();
+  }
+
+  return null;
+}
+
+function getStoryDateLabel(story: Story) {
+  const date = getStoryDate(story.publishedAt) ?? getStoryDate(story.createdAt);
+
+  if (!date) {
+    return null;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function HomeScreen() {
   const { refresh } = useLocalSearchParams<{ refresh?: string }>();
   const [allStories, setAllStories] = useState<Story[]>([]);
@@ -147,9 +186,13 @@ export default function HomeScreen() {
           keyExtractor={(item, index) => item.id || `${item.url}-${index}`}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
+            const storyDate = getStoryDateLabel(item);
             const cardContent = (
               <>
-                <Text style={styles.category}>{item.category ?? "News"}</Text>
+                <View style={styles.cardMetaRow}>
+                  <Text style={styles.category}>{item.category ?? "News"}</Text>
+                  {storyDate ? <Text style={styles.storyDate}>{storyDate}</Text> : null}
+                </View>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.summary}>{item.summary ?? item.title}</Text>
                 <Text style={styles.source}>{item.source}</Text>
@@ -307,10 +350,22 @@ const styles = StyleSheet.create({
   },
   category: {
     color: Colors.brand.red,
+    flexShrink: 1,
     fontSize: 12,
     fontWeight: "800",
-    marginBottom: 8,
     textTransform: "uppercase",
+  },
+  cardMetaRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 8,
+  },
+  storyDate: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
   },
   title: {
     color: Colors.text,

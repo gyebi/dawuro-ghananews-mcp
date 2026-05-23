@@ -31,6 +31,18 @@ The MVP currently has:
 - Story details screen
 - Logo and branding
 
+## Demo Routine
+
+Before demos, manually refresh Firestore with the latest scraped stories:
+
+```bash
+curl -X POST "http://localhost:8000/news/sync?limit=10"
+```
+
+This keeps `createdAt` as the first time Dawuro saved a story, refreshes `updatedAt` when Dawuro sees it again, and preserves `publishedAt` when an article date is available.
+
+Later, replace this manual habit with an automatic scheduled sync job.
+
 ## App Architecture
 
 ```text

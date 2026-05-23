@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "frontend-mobile",
-    "slug": "frontend-mobile",
+    "name": "Dawuro",
+    "slug": "dawuro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontendmobile",
+    "scheme": "dawuro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -48,8 +48,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a87c3456-5f1e-4a25-b200-a85db80d9874"
+        "projectId": "1e91868d-f8d7-4c09-8e6e-9fa9f4581eb7"
       }
-    }
+    },
+    "owner": "dawuro"
   }
 }

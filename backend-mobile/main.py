@@ -52,6 +52,7 @@ def sync_news_to_firestore(limit: int = 10):
                 "source": story.get("source", "Unknown"),
                 "category": story.get("category", "News"),
                 "url": story.get("url", ""),
+                "publishedAt": story.get("publishedAt"),
             })
 
             saved_story_ids.append(story_id)

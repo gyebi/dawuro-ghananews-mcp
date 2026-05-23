@@ -18,6 +18,8 @@ export type Story = {
   category: string;
   url?: string;
   createdAt?: unknown;
+  updatedAt?: unknown;
+  publishedAt?: unknown;
 };
 
 type SaveableStory = Story | (Omit<Story, "id"> & { id?: string });
