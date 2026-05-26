@@ -7,6 +7,7 @@ from repositories.firestore_repository import DEFAULT_STORIES_COLLECTION, MCP_ST
 from services.briefing_service import compare_coverage, create_briefing
 from services.news_service import get_article_by_id, get_latest_articles, search_articles
 from services.promotion_service import promote_mcp_stories, promote_mcp_story
+from services.recommendation_service import get_trending_topics, recommend_articles
 from services.scraper_service import list_sources, sync_latest_stories
 from services.summary_service import explain_article, extract_key_points, summarize_article
 from services.topic_service import (
@@ -205,6 +206,36 @@ def get_personalized_news_briefing(
     )
 
 
+@mcp.tool()
+def get_news_trending_topics(
+    limit: int = 10,
+    sample_size: int = 100,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> list[dict[str, Any]]:
+    """Find likely trending topics from recent Dawuro stories."""
+    return get_trending_topics(
+        limit=limit,
+        sample_size=sample_size,
+        collection_name=collection_name,
+    )
+
+
+@mcp.tool()
+def recommend_news_articles(
+    topic: str | None = None,
+    user_id: str = DEFAULT_USER_ID,
+    limit: int = 10,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> dict[str, Any]:
+    """Recommend Dawuro articles from a topic or a user's tracked topics."""
+    return recommend_articles(
+        topic=topic,
+        user_id=user_id,
+        limit=limit,
+        collection_name=collection_name,
+    )
+
+
 @mcp.resource("dawuro://articles/latest")
 def latest_articles_resource() -> str:
     """Latest Dawuro articles."""
@@ -236,6 +267,12 @@ def sources_resource() -> str:
 def tracked_topics_resource() -> str:
     """Tracked Dawuro news topics for the default user."""
     return json.dumps(get_tracked_topics(), default=str)
+
+
+@mcp.resource("dawuro://topics/trending")
+def trending_topics_resource() -> str:
+    """Likely trending topics from recent Dawuro stories."""
+    return json.dumps(get_trending_topics(), default=str)
 
 
 @mcp.prompt()

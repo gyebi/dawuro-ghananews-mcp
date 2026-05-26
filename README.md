@@ -135,6 +135,8 @@ get_tracked_news_topics
 remove_tracked_news_topic
 find_news_timeline_for_topic
 get_personalized_news_briefing
+get_news_trending_topics
+recommend_news_articles
 ```
 
 ## MCP Prompts
@@ -154,7 +156,8 @@ Phase 1: Basic news tools              done
 Phase 2: MCP scrape review/promotion   done
 Phase 3: Summary/briefing tools        started
 Phase 4: Topic tracking tools          started
-Phase 5: Frontend AI accessories       not started
+Phase 5: Recommendations/trending      started
+Phase 6: Frontend AI accessories       not started
 ```
 
 Available source values:
