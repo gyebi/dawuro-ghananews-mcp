@@ -70,6 +70,20 @@ Before demos, manually refresh Firestore with the latest scraped stories by call
 You can sync one source/news agency at a time by passing a `source` value such as `citi`, `myjoy`, or `graphic`.
 The MCP sync tool writes to `mcpStories` by default. Pass `collection_name: "stories"` only when you intentionally want MCP sync output to update the production app feed.
 
+Recommended MCP review flow:
+
+```text
+run_news_sync
+        ↓
+review_mcp_stories
+        ↓
+promote_mcp_story_to_production
+        ↓
+mobile app sees promoted story in stories
+```
+
+Use `promote_mcp_stories_to_production` only after reviewing a batch of MCP-scraped stories.
+
 The deployed Firebase scheduled function also syncs stories automatically every 3 hours.
 
 ## Workflow Gap Analysis - May 25, 2026
@@ -106,6 +120,9 @@ search_news
 get_article_details
 list_news_sources
 run_news_sync
+review_mcp_stories
+promote_mcp_story_to_production
+promote_mcp_stories_to_production
 ```
 
 Available source values:

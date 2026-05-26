@@ -86,6 +86,9 @@ class FirestoreStoryRepository:
 
         return _serialize_story(snapshot.id, snapshot.to_dict() or {})
 
+    def update_story(self, story_id: str, data: dict[str, Any]) -> None:
+        self._collection().document(story_id).set(data, merge=True)
+
     def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         query_lower = query.lower().strip()
 
@@ -126,3 +129,21 @@ class FirestoreStoryRepository:
 
         story_ref.set(story_data, merge=True)
         return story_id
+
+    def copy_story_to(
+        self,
+        story_id: str,
+        target_repository: "FirestoreStoryRepository",
+        extra_fields: dict[str, Any] | None = None,
+    ) -> str | None:
+        story = self.get_by_id(story_id)
+
+        if story is None:
+            return None
+
+        story.pop("id", None)
+
+        if extra_fields:
+            story.update(extra_fields)
+
+        return target_repository.save_story(story)
