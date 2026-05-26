@@ -86,7 +86,23 @@ mobile app sees promoted story in stories
 
 Use `promote_mcp_stories_to_production` only after reviewing a batch of MCP-scraped stories.
 
-The deployed Firebase scheduled function also syncs stories automatically every 3 hours.
+The deployed Firebase scheduled function syncs production `stories` automatically every 3 hours.
+
+To refresh the safer MCP review collection from the deployed Firebase backend, call the `manual_sync` function after deployment. This writes to `mcpStories`, not production `stories`.
+
+```text
+https://<region>-<project-id>.cloudfunctions.net/manual_sync?limit=10
+```
+
+You can refresh one source with:
+
+```text
+https://<region>-<project-id>.cloudfunctions.net/manual_sync?limit=10&source=citi
+```
+
+If `MANUAL_SYNC_TOKEN` is set in the function environment, pass it as a bearer token or `token` query parameter.
+
+After reviewing cloud-synced `mcpStories`, promote approved stories into production with the MCP promotion tools.
 
 ## Workflow Gap Analysis - May 25, 2026
 
@@ -105,12 +121,11 @@ This section captures the current gaps found while comparing the repo against `d
 
 ### Gaps to Work On Later
 
-- Add a manual Firebase refresh function. The cloud backend currently has `sync_news` for automatic scheduled refreshes every 3 hours, but it does not yet have a `manual_sync` cloud function for immediate refreshes before demos or investor testing.
 - Update workflow documentation paths. The PDF references `frontend-mobile/app/index.tsx` and `frontend-mobile/lib/stories.ts`, but the current repo uses `frontend-mobile/src/app/(tabs)/index.tsx` and `frontend-mobile/src/lib/stories.ts`.
 - Decide what to do with the frontend refresh tab. `frontend-mobile/src/app/(tabs)/refresh.tsx` exists but currently returns `null`.
 - Consider date coverage for fallback-scraped stories. Stories from WordPress APIs and RSS feeds can include `publishedAt`, but stories found through HTML fallback scraping usually do not.
 
-Recommended next improvement: add `manual_sync` to the Firebase Functions backend so demos can refresh production Firestore without running a local process.
+Recommended next improvement: decide whether the frontend refresh tab should call a safe refresh workflow, show sync status, or stay hidden.
 
 ## MCP Tools
 

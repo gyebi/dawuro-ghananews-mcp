@@ -290,9 +290,9 @@ def scrape_news(limit_per_source: int = 10) -> list[dict]:
     return stories
 
 
-def save_story(db, story: dict) -> str:
+def save_story(db, story: dict, collection_name: str = "stories") -> str:
     story_id = make_story_id(story)
-    story_ref = db.collection("stories").document(story_id)
+    story_ref = db.collection(collection_name).document(story_id)
     snapshot = story_ref.get()
 
     story_data = {
