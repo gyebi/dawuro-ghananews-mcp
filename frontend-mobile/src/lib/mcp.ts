@@ -35,6 +35,27 @@ export type RelatedArticle = {
   url?: string;
 };
 
+export type BriefingStory = ArticleSummary;
+
+export type BriefingSection = {
+  category: string;
+  count: number;
+  stories: BriefingStory[];
+};
+
+export type MorningBriefing = {
+  title: string;
+  totalStories: number;
+  sections: BriefingSection[];
+};
+
+export type TrendingTopic = {
+  topic: string;
+  score: number;
+  sourceCount: number;
+  sources: string[];
+};
+
 export function isMcpBridgeConfigured() {
   return Boolean(mcpBridgeUrl);
 }
@@ -106,6 +127,20 @@ export function explainNewsStory(articleId: string) {
 export function getRelatedNewsArticles(articleId: string, limit = 4) {
   return callMcpTool<RelatedArticle[]>("get_related_news_articles", {
     article_id: articleId,
+    limit,
+    collection_name: "stories",
+  });
+}
+
+export function createMorningBriefing(limit = 20) {
+  return callMcpTool<MorningBriefing>("create_morning_briefing", {
+    limit,
+    collection_name: "stories",
+  });
+}
+
+export function getNewsTrendingTopics(limit = 10) {
+  return callMcpTool<TrendingTopic[]>("get_news_trending_topics", {
     limit,
     collection_name: "stories",
   });
