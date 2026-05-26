@@ -11,9 +11,15 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { getStoryById, saveStoryForLater, type Story } from "@/lib/stories";
 import {
+  explainNewsStory,
+  extractArticleKeyPoints,
+  getRelatedNewsArticles,
   isMcpBridgeConfigured,
   summarizeNewsArticle,
+  type ArticleKeyPoints,
   type ArticleSummary,
+  type RelatedArticle,
+  type StoryExplanation,
 } from "@/lib/mcp";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
@@ -28,7 +34,10 @@ export default function StoryDetailScreen() {
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<ArticleSummary | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiKeyPoints, setAiKeyPoints] = useState<ArticleKeyPoints | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<StoryExplanation | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[] | null>(null);
+  const [aiLoadingAction, setAiLoadingAction] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStory() {
@@ -79,15 +88,44 @@ export default function StoryDetailScreen() {
 
         {isMcpBridgeConfigured() ? (
           <View style={styles.aiSection}>
-            <Pressable
-              style={styles.aiButton}
-              onPress={handleSummarizeStory}
-              disabled={aiLoading}
-            >
-              <Text style={styles.aiButtonText}>
-                {aiLoading ? "Summarizing..." : "Summarize"}
-              </Text>
-            </Pressable>
+            <View style={styles.aiActions}>
+              <Pressable
+                style={styles.aiButton}
+                onPress={handleSummarizeStory}
+                disabled={Boolean(aiLoadingAction)}
+              >
+                <Text style={styles.aiButtonText}>
+                  {aiLoadingAction === "summary" ? "..." : "Summary"}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={styles.aiButton}
+                onPress={handleKeyPoints}
+                disabled={Boolean(aiLoadingAction)}
+              >
+                <Text style={styles.aiButtonText}>
+                  {aiLoadingAction === "points" ? "..." : "Points"}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={styles.aiButton}
+                onPress={handleExplainStory}
+                disabled={Boolean(aiLoadingAction)}
+              >
+                <Text style={styles.aiButtonText}>
+                  {aiLoadingAction === "explain" ? "..." : "Explain"}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={styles.aiButton}
+                onPress={handleRelatedArticles}
+                disabled={Boolean(aiLoadingAction)}
+              >
+                <Text style={styles.aiButtonText}>
+                  {aiLoadingAction === "related" ? "..." : "Related"}
+                </Text>
+              </Pressable>
+            </View>
 
             {aiSummary ? (
               <View style={styles.aiSummary}>
@@ -98,6 +136,45 @@ export default function StoryDetailScreen() {
                     {point}
                   </Text>
                 ))}
+              </View>
+            ) : null}
+
+            {aiKeyPoints ? (
+              <View style={styles.aiSummary}>
+                <Text style={styles.aiSummaryTitle}>Key Points</Text>
+                {aiKeyPoints.keyPoints.map((point) => (
+                  <Text key={point} style={styles.aiPoint}>
+                    {point}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+
+            {aiExplanation ? (
+              <View style={styles.aiSummary}>
+                <Text style={styles.aiSummaryTitle}>Why It Matters</Text>
+                <Text style={styles.aiSummaryText}>{aiExplanation.whatHappened}</Text>
+                <Text style={styles.aiSummaryText}>{aiExplanation.whyItMatters}</Text>
+                {aiExplanation.questionsToAsk.map((question) => (
+                  <Text key={question} style={styles.aiPoint}>
+                    {question}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+
+            {relatedArticles ? (
+              <View style={styles.aiSummary}>
+                <Text style={styles.aiSummaryTitle}>Related Stories</Text>
+                {relatedArticles.length ? (
+                  relatedArticles.map((article) => (
+                    <Text key={article.id ?? article.title} style={styles.relatedStory}>
+                      {article.title}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={styles.aiSummaryText}>No related stories found.</Text>
+                )}
               </View>
             ) : null}
           </View>
@@ -161,17 +238,65 @@ export default function StoryDetailScreen() {
 
 
   async function handleSummarizeStory() {
-    if (!id || aiLoading) return;
+    if (!id || aiLoadingAction) return;
 
     try {
-      setAiLoading(true);
+      setAiLoadingAction("summary");
       const summary = await summarizeNewsArticle(id, "short");
       setAiSummary(summary);
     } catch (error) {
       console.log("MCP summarize error:", error);
       alert("Could not summarize story.");
     } finally {
-      setAiLoading(false);
+      setAiLoadingAction(null);
+    }
+  }
+
+
+  async function handleKeyPoints() {
+    if (!id || aiLoadingAction) return;
+
+    try {
+      setAiLoadingAction("points");
+      const points = await extractArticleKeyPoints(id);
+      setAiKeyPoints(points);
+    } catch (error) {
+      console.log("MCP key points error:", error);
+      alert("Could not extract key points.");
+    } finally {
+      setAiLoadingAction(null);
+    }
+  }
+
+
+  async function handleExplainStory() {
+    if (!id || aiLoadingAction) return;
+
+    try {
+      setAiLoadingAction("explain");
+      const explanation = await explainNewsStory(id);
+      setAiExplanation(explanation);
+    } catch (error) {
+      console.log("MCP explain error:", error);
+      alert("Could not explain story.");
+    } finally {
+      setAiLoadingAction(null);
+    }
+  }
+
+
+  async function handleRelatedArticles() {
+    if (!id || aiLoadingAction) return;
+
+    try {
+      setAiLoadingAction("related");
+      const related = await getRelatedNewsArticles(id);
+      setRelatedArticles(related);
+    } catch (error) {
+      console.log("MCP related stories error:", error);
+      alert("Could not load related stories.");
+    } finally {
+      setAiLoadingAction(null);
     }
   }
 }
@@ -280,11 +405,18 @@ const styles = StyleSheet.create({
   aiSection: {
     marginTop: 12,
   },
+  aiActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   aiButton: {
     alignItems: "center",
     backgroundColor: Colors.brand.green,
     borderRadius: 8,
-    padding: 15,
+    flexGrow: 1,
+    minWidth: "47%",
+    padding: 13,
   },
   aiButtonText: {
     color: Colors.white,
@@ -316,6 +448,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     marginTop: 4,
+  },
+  relatedStory: {
+    borderTopColor: Colors.borderMuted,
+    borderTopWidth: 1,
+    color: Colors.textStrong,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 20,
+    paddingTop: 8,
+    marginTop: 8,
   },
 
 });

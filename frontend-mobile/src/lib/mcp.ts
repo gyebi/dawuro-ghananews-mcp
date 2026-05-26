@@ -11,6 +11,30 @@ export type ArticleSummary = {
   url?: string;
 };
 
+export type ArticleKeyPoints = {
+  articleId: string;
+  title: string;
+  keyPoints: string[];
+};
+
+export type StoryExplanation = {
+  title: string;
+  source: string;
+  category: string;
+  whatHappened: string;
+  whyItMatters: string;
+  questionsToAsk: string[];
+};
+
+export type RelatedArticle = {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  category: string;
+  url?: string;
+};
+
 export function isMcpBridgeConfigured() {
   return Boolean(mcpBridgeUrl);
 }
@@ -60,6 +84,29 @@ export function summarizeNewsArticle(
   return callMcpTool<ArticleSummary>("summarize_news_article", {
     article_id: articleId,
     style,
+    collection_name: "stories",
+  });
+}
+
+export function extractArticleKeyPoints(articleId: string, limit = 4) {
+  return callMcpTool<ArticleKeyPoints>("extract_article_key_points", {
+    article_id: articleId,
+    limit,
+    collection_name: "stories",
+  });
+}
+
+export function explainNewsStory(articleId: string) {
+  return callMcpTool<StoryExplanation>("explain_news_story", {
+    article_id: articleId,
+    collection_name: "stories",
+  });
+}
+
+export function getRelatedNewsArticles(articleId: string, limit = 4) {
+  return callMcpTool<RelatedArticle[]>("get_related_news_articles", {
+    article_id: articleId,
+    limit,
     collection_name: "stories",
   });
 }
