@@ -4,6 +4,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from repositories.firestore_repository import DEFAULT_STORIES_COLLECTION, MCP_STORIES_COLLECTION
+from services.admin_service import check_scraper_status, validate_article_data
 from services.briefing_service import compare_coverage, create_briefing
 from services.news_service import (
     get_article_by_id,
@@ -278,6 +279,21 @@ def recommend_news_articles(
         limit=limit,
         collection_name=collection_name,
     )
+
+
+@mcp.tool()
+def check_news_scraper_status(limit_per_source: int = 3) -> dict[str, Any]:
+    """Check whether configured Dawuro scrapers can currently find stories."""
+    return check_scraper_status(limit_per_source=limit_per_source)
+
+
+@mcp.tool()
+def validate_news_article_data(
+    limit: int = 50,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> dict[str, Any]:
+    """Validate recent Dawuro article records for required fields."""
+    return validate_article_data(limit=limit, collection_name=collection_name)
 
 
 @mcp.resource("dawuro://articles/latest")
