@@ -123,6 +123,29 @@ run_news_sync
 review_mcp_stories
 promote_mcp_story_to_production
 promote_mcp_stories_to_production
+summarize_news_article
+extract_article_key_points
+explain_news_story
+create_morning_briefing
+compare_news_coverage
+```
+
+## MCP Prompts
+
+```text
+morning_briefing_prompt
+summarize_article_prompt
+compare_coverage_prompt
+explain_background_prompt
+```
+
+## Current MCP Progress
+
+```text
+Phase 1: Basic news tools              done
+Phase 2: MCP scrape review/promotion   done
+Phase 3: Summary/briefing tools        started
+Phase 4: Frontend AI accessories       not started
 ```
 
 Available source values:
