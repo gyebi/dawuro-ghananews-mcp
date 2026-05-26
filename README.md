@@ -120,6 +120,9 @@ Recommended next improvement: add `manual_sync` to the Firebase Functions backen
 get_latest_news
 search_news
 get_article_details
+get_news_by_category
+get_related_news_articles
+list_news_categories
 list_news_sources
 run_news_sync
 review_mcp_stories

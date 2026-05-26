@@ -5,7 +5,14 @@ from mcp.server.fastmcp import FastMCP
 
 from repositories.firestore_repository import DEFAULT_STORIES_COLLECTION, MCP_STORIES_COLLECTION
 from services.briefing_service import compare_coverage, create_briefing
-from services.news_service import get_article_by_id, get_latest_articles, search_articles
+from services.news_service import (
+    get_article_by_id,
+    get_articles_by_category,
+    get_categories,
+    get_latest_articles,
+    get_related_articles,
+    search_articles,
+)
 from services.promotion_service import promote_mcp_stories, promote_mcp_story
 from services.recommendation_service import get_trending_topics, recommend_articles
 from services.scraper_service import list_sources, sync_latest_stories
@@ -55,6 +62,43 @@ def get_article_details(
         return {"error": f"Article '{article_id}' was not found."}
 
     return article
+
+
+@mcp.tool()
+def get_news_by_category(
+    category: str,
+    limit: int = 20,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> list[dict[str, Any]]:
+    """Get Dawuro stories from a category such as News, Business, Sports, or Politics."""
+    return get_articles_by_category(
+        category=category,
+        limit=limit,
+        collection_name=collection_name,
+    )
+
+
+@mcp.tool()
+def get_related_news_articles(
+    article_id: str,
+    limit: int = 5,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> list[dict[str, Any]]:
+    """Find Dawuro stories related to one article by category, source, and title terms."""
+    return get_related_articles(
+        article_id=article_id,
+        limit=limit,
+        collection_name=collection_name,
+    )
+
+
+@mcp.tool()
+def list_news_categories(
+    sample_size: int = 100,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> list[dict[str, Any]]:
+    """List categories found in recent Dawuro stories."""
+    return get_categories(sample_size=sample_size, collection_name=collection_name)
 
 
 @mcp.tool()
@@ -261,6 +305,12 @@ def article_resource(article_id: str) -> str:
 def sources_resource() -> str:
     """Configured Dawuro news sources."""
     return json.dumps(list_sources(), default=str)
+
+
+@mcp.resource("dawuro://categories")
+def categories_resource() -> str:
+    """Categories found in recent Dawuro stories."""
+    return json.dumps(get_categories(), default=str)
 
 
 @mcp.resource("dawuro://topics/tracked")
