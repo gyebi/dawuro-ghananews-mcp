@@ -157,6 +157,16 @@ check_news_scraper_status
 validate_news_article_data
 ```
 
+## Frontend MCP Bridge
+
+The mobile app keeps reading the production feed directly from Firestore. AI actions use a separate MCP bridge URL when configured:
+
+```text
+EXPO_PUBLIC_MCP_BRIDGE_URL=https://your-mcp-bridge.example.com
+```
+
+The first wired frontend action is article summarization on the story detail screen. If `EXPO_PUBLIC_MCP_BRIDGE_URL` is not set, the app hides the MCP-powered action and continues working as a normal Firestore news app.
+
 ## MCP Prompts
 
 ```text
@@ -176,7 +186,8 @@ Phase 3: Summary/briefing tools        started
 Phase 4: Topic tracking tools          started
 Phase 5: Recommendations/trending      started
 Phase 6: Admin/maintenance tools       started
-Phase 7: Frontend AI accessories       not started
+Phase 7: Frontend MCP bridge           started
+Phase 8: Frontend AI accessories       started
 ```
 
 Available source values:

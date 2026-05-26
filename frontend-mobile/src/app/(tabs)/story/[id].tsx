@@ -10,6 +10,11 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { getStoryById, saveStoryForLater, type Story } from "@/lib/stories";
+import {
+  isMcpBridgeConfigured,
+  summarizeNewsArticle,
+  type ArticleSummary,
+} from "@/lib/mcp";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 import { FacebookIcon } from "@/icons/facebook-icon";
@@ -22,6 +27,8 @@ export default function StoryDetailScreen() {
 
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<ArticleSummary | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     async function loadStory() {
@@ -69,6 +76,32 @@ export default function StoryDetailScreen() {
         <Pressable style={styles.saveButton} onPress={handleSaveStory}>
           <Text style={styles.saveButtonText}>Save Story</Text>
         </Pressable>
+
+        {isMcpBridgeConfigured() ? (
+          <View style={styles.aiSection}>
+            <Pressable
+              style={styles.aiButton}
+              onPress={handleSummarizeStory}
+              disabled={aiLoading}
+            >
+              <Text style={styles.aiButtonText}>
+                {aiLoading ? "Summarizing..." : "Summarize"}
+              </Text>
+            </Pressable>
+
+            {aiSummary ? (
+              <View style={styles.aiSummary}>
+                <Text style={styles.aiSummaryTitle}>Dawuro Summary</Text>
+                <Text style={styles.aiSummaryText}>{aiSummary.summary}</Text>
+                {aiSummary.keyPoints.map((point) => (
+                  <Text key={point} style={styles.aiPoint}>
+                    {point}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={styles.shareSection}>
           <Text style={styles.shareTitle}>Share story</Text>
@@ -123,6 +156,22 @@ export default function StoryDetailScreen() {
     } catch (error) {
       console.log("Share story error:", error);
       alert("Could not share story.");
+    }
+  }
+
+
+  async function handleSummarizeStory() {
+    if (!id || aiLoading) return;
+
+    try {
+      setAiLoading(true);
+      const summary = await summarizeNewsArticle(id, "short");
+      setAiSummary(summary);
+    } catch (error) {
+      console.log("MCP summarize error:", error);
+      alert("Could not summarize story.");
+    } finally {
+      setAiLoading(false);
     }
   }
 }
@@ -225,6 +274,47 @@ const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     width: 48,
+  },
+
+  aiSection: {
+    marginTop: 12,
+  },
+  aiButton: {
+    alignItems: "center",
+    backgroundColor: Colors.brand.green,
+    borderRadius: 16,
+    padding: 16,
+  },
+  aiButtonText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  aiSummary: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.borderCool,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 14,
+  },
+  aiSummaryTitle: {
+    color: Colors.textStrong,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 8,
+  },
+  aiSummaryText: {
+    color: Colors.body,
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 8,
+  },
+  aiPoint: {
+    color: Colors.textSoft,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 4,
   },
 
 });
