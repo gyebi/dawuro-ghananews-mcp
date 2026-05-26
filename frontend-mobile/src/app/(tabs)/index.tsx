@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
-import { getStories, type Story } from "@/lib/stories";
+import { getStories, newsAgencies, type NewsAgency, type Story } from "@/lib/stories";
 
 const quickTopics = ["All", "Politics", "Business", "Sports", "Education", "Health", "Entertainment"];
 const searchableStoryFields = ["title", "summary", "category", "source"] as const;
@@ -62,12 +62,13 @@ export default function HomeScreen() {
   const [allStories, setAllStories] = useState<Story[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [query, setQuery] = useState("");
+  const [selectedAgency, setSelectedAgency] = useState<NewsAgency>("All");
   const [loading, setLoading] = useState(false);
 
-  async function loadStories() {
+  const loadStories = useCallback(async (source: NewsAgency) => {
     try {
       setLoading(true);
-      const data = await getStories();
+      const data = await getStories(source);
       setAllStories(data);
       setStories(data);
     } catch (error) {
@@ -75,7 +76,7 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   function searchNews() {
     filterStories(query);
@@ -103,9 +104,14 @@ export default function HomeScreen() {
     filterStories(topic);
   }
 
+  function filterByAgency(source: NewsAgency) {
+    setSelectedAgency(source);
+    setQuery("");
+  }
+
   useEffect(() => {
-    loadStories();
-  }, [refresh]);
+    loadStories(selectedAgency);
+  }, [loadStories, refresh, selectedAgency]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -154,6 +160,34 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.topicSection}>
+          <Text style={styles.topicTitle}>News Agencies</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.topics}
+          >
+            {newsAgencies.map((agency) => (
+              <Pressable
+                key={agency}
+                style={[
+                  styles.topicChip,
+                  selectedAgency === agency && styles.selectedTopicChip,
+                ]}
+                onPress={() => filterByAgency(agency)}
+              >
+                <View style={styles.topicChipGloss} />
+                <Text
+                  style={[
+                    styles.topicChipText,
+                    selectedAgency === agency && styles.selectedTopicChipText,
+                  ]}
+                >
+                  {agency}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
           <Text style={styles.topicTitle}>Quick Topics</Text>
           <ScrollView
             horizontal
@@ -182,7 +216,7 @@ export default function HomeScreen() {
         <FlatList
           data={stories}
           refreshing={loading}
-          onRefresh={loadStories}
+          onRefresh={() => loadStories(selectedAgency)}
           keyExtractor={(item, index) => item.id || `${item.url}-${index}`}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
@@ -398,6 +432,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.textMuted,
     marginBottom: 8,
+    marginTop: 6,
     textTransform: "uppercase",
   },
   topics: {
@@ -429,6 +464,13 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontWeight: "700",
     fontSize: 12,
+  },
+  selectedTopicChip: {
+    backgroundColor: Colors.brand.green,
+    borderColor: Colors.brand.green,
+  },
+  selectedTopicChipText: {
+    color: Colors.white,
   },
   logoRow: {
     flexDirection: "row",

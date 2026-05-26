@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import firestore, initialize_app
 from firebase_functions import scheduler_fn
 from firebase_functions.core import init
+from news_sync import save_story, scrape_news
 
 
 db = None
@@ -28,11 +29,16 @@ def get_db():
 
 @scheduler_fn.on_schedule(schedule="every 3 hours")
 def sync_news(event: scheduler_fn.ScheduledEvent) -> None:
-    get_db().collection("syncLogs").add(
+    db = get_db()
+    stories = scrape_news()
+    saved_ids = [save_story(db, story) for story in stories]
+
+    db.collection("syncLogs").add(
         {
             "message": "Dawuro scheduled sync ran successfully",
+            "count": len(saved_ids),
             "ranAt": datetime.now(timezone.utc).isoformat(),
         }
     )
 
-    print("Dawuro scheduled sync ran successfully")
+    print(f"Dawuro scheduled sync saved {len(saved_ids)} stories")

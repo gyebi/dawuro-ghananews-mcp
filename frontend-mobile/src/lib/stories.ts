@@ -10,6 +10,9 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
+export const newsAgencies = ["All", "citi", "myjoy", "graphic"] as const;
+export type NewsAgency = (typeof newsAgencies)[number];
+
 export type Story = {
   id: string;
   title: string;
@@ -24,16 +27,21 @@ export type Story = {
 
 type SaveableStory = Story | (Omit<Story, "id"> & { id?: string });
 
-export async function getStories(): Promise<Story[]> {
+export async function getStories(source: NewsAgency = "All"): Promise<Story[]> {
   const storiesRef = collection(db, "stories");
   const q = query(storiesRef, orderBy("createdAt", "desc"));
 
   const snapshot = await getDocs(q);
-
-  return snapshot.docs.map((doc) => ({
+  const stories = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...(doc.data() as Omit<Story, "id">),
   }));
+
+  if (source === "All") {
+    return stories;
+  }
+
+  return stories.filter((story) => story.source === source);
 }
 
 export async function getStoryById(id: string): Promise<Story | null> {
