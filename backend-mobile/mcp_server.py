@@ -9,6 +9,14 @@ from services.news_service import get_article_by_id, get_latest_articles, search
 from services.promotion_service import promote_mcp_stories, promote_mcp_story
 from services.scraper_service import list_sources, sync_latest_stories
 from services.summary_service import explain_article, extract_key_points, summarize_article
+from services.topic_service import (
+    DEFAULT_USER_ID,
+    find_timeline_for_topic,
+    get_personalized_briefing,
+    get_tracked_topics,
+    remove_tracked_topic,
+    track_topic,
+)
 
 
 mcp = FastMCP("Dawuro")
@@ -151,6 +159,52 @@ def compare_news_coverage(
     return compare_coverage(query=query, articles=articles)
 
 
+@mcp.tool()
+def track_news_topic(topic: str, user_id: str = DEFAULT_USER_ID) -> dict[str, Any]:
+    """Track a news topic for later personalized Dawuro briefings."""
+    return track_topic(topic=topic, user_id=user_id)
+
+
+@mcp.tool()
+def get_tracked_news_topics(user_id: str = DEFAULT_USER_ID) -> list[dict[str, Any]]:
+    """List tracked Dawuro news topics for a user."""
+    return get_tracked_topics(user_id=user_id)
+
+
+@mcp.tool()
+def remove_tracked_news_topic(topic_id: str) -> dict[str, Any]:
+    """Remove one tracked Dawuro topic by tracked topic ID."""
+    return remove_tracked_topic(topic_id=topic_id)
+
+
+@mcp.tool()
+def find_news_timeline_for_topic(
+    topic: str,
+    limit: int = 10,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> dict[str, Any]:
+    """Find recent Dawuro stories matching a topic and present them as a timeline."""
+    return find_timeline_for_topic(
+        topic=topic,
+        limit=limit,
+        collection_name=collection_name,
+    )
+
+
+@mcp.tool()
+def get_personalized_news_briefing(
+    user_id: str = DEFAULT_USER_ID,
+    per_topic_limit: int = 5,
+    collection_name: str = DEFAULT_STORIES_COLLECTION,
+) -> dict[str, Any]:
+    """Create a Dawuro briefing from a user's tracked topics."""
+    return get_personalized_briefing(
+        user_id=user_id,
+        per_topic_limit=per_topic_limit,
+        collection_name=collection_name,
+    )
+
+
 @mcp.resource("dawuro://articles/latest")
 def latest_articles_resource() -> str:
     """Latest Dawuro articles."""
@@ -176,6 +230,12 @@ def article_resource(article_id: str) -> str:
 def sources_resource() -> str:
     """Configured Dawuro news sources."""
     return json.dumps(list_sources(), default=str)
+
+
+@mcp.resource("dawuro://topics/tracked")
+def tracked_topics_resource() -> str:
+    """Tracked Dawuro news topics for the default user."""
+    return json.dumps(get_tracked_topics(), default=str)
 
 
 @mcp.prompt()
@@ -208,6 +268,15 @@ def explain_background_prompt(topic: str) -> str:
     return (
         f"Explain the background of {topic} for a reader who wants context, not opinion. "
         "Use plain language, separate confirmed facts from interpretation, and suggest follow-up questions."
+    )
+
+
+@mcp.prompt()
+def tracked_topic_briefing_prompt(topic: str) -> str:
+    return (
+        f"Create a concise Dawuro update for the tracked topic {topic}. "
+        "Use recent matching stories, identify the sources, explain the timeline, "
+        "and end with what the reader should watch next."
     )
 
 

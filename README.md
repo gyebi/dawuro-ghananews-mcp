@@ -38,6 +38,8 @@ Stories are saved in the Firestore `stories` collection. Dawuro uses the story U
 
 MCP scraper runs save to the separate `mcpStories` collection by default. This keeps MCP extraction/testing separate from the production app feed until those records are reviewed or intentionally promoted into `stories`.
 
+Tracked topics are saved in the separate `trackedTopics` collection. Topic tracking currently accepts a `user_id` value and defaults to `default` until Firebase Auth or another identity layer is connected.
+
 Saved story fields:
 
 - `title`
@@ -128,6 +130,11 @@ extract_article_key_points
 explain_news_story
 create_morning_briefing
 compare_news_coverage
+track_news_topic
+get_tracked_news_topics
+remove_tracked_news_topic
+find_news_timeline_for_topic
+get_personalized_news_briefing
 ```
 
 ## MCP Prompts
@@ -137,6 +144,7 @@ morning_briefing_prompt
 summarize_article_prompt
 compare_coverage_prompt
 explain_background_prompt
+tracked_topic_briefing_prompt
 ```
 
 ## Current MCP Progress
@@ -145,7 +153,8 @@ explain_background_prompt
 Phase 1: Basic news tools              done
 Phase 2: MCP scrape review/promotion   done
 Phase 3: Summary/briefing tools        started
-Phase 4: Frontend AI accessories       not started
+Phase 4: Topic tracking tools          started
+Phase 5: Frontend AI accessories       not started
 ```
 
 Available source values:
