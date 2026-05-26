@@ -106,13 +106,11 @@ This section captures the current gaps found while comparing the repo against `d
 ### Gaps to Work On Later
 
 - Add a manual Firebase refresh function. The cloud backend currently has `sync_news` for automatic scheduled refreshes every 3 hours, but it does not yet have a `manual_sync` cloud function for immediate refreshes before demos or investor testing.
-- Add `scrapedAt` to the cloud scheduled save path. The MCP/local repository now writes `scrapedAt`, but `backend-mobile/functions/news_sync.py` still needs the same field.
-- Reduce scraper duplication. The local scraper in `backend-mobile/scrapers.py` and the cloud scraper in `backend-mobile/functions/news_sync.py` are very similar, which means future scraper fixes need to be copied to both places unless they are shared or carefully kept in sync.
 - Update workflow documentation paths. The PDF references `frontend-mobile/app/index.tsx` and `frontend-mobile/lib/stories.ts`, but the current repo uses `frontend-mobile/src/app/(tabs)/index.tsx` and `frontend-mobile/src/lib/stories.ts`.
 - Decide what to do with the frontend refresh tab. `frontend-mobile/src/app/(tabs)/refresh.tsx` exists but currently returns `null`.
 - Consider date coverage for fallback-scraped stories. Stories from WordPress APIs and RSS feeds can include `publishedAt`, but stories found through HTML fallback scraping usually do not.
 
-Recommended next improvement: add `manual_sync` to the Firebase Functions backend, then align the cloud save path with the shared repository fields.
+Recommended next improvement: add `manual_sync` to the Firebase Functions backend so demos can refresh production Firestore without running a local process.
 
 ## MCP Tools
 

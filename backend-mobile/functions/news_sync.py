@@ -172,67 +172,120 @@ def scrape_rss_posts(source: str, limit: int = 10) -> list[dict]:
     return stories
 
 
-def scrape_news(limit_per_source: int = 10) -> list[dict]:
+def scrape_source(source: str, limit: int = 10) -> dict:
+    if source not in GHANA_SOURCES:
+        return {
+            "error": f"Unknown source '{source}'. Available sources: {', '.join(GHANA_SOURCES)}"
+        }
+
+    base_url = GHANA_SOURCES[source]
+    source_urls = SOURCE_PAGES.get(source, [base_url])
     headers = {"User-Agent": "Mozilla/5.0"}
-    stories = []
 
-    for source, base_url in GHANA_SOURCES.items():
-        try:
-            source_urls = SOURCE_PAGES.get(source, [base_url])
-            seen_urls = set()
-            source_stories = scrape_wordpress_posts(source, limit_per_source)
+    try:
+        stories = scrape_wordpress_posts(source, limit)
 
-            if not source_stories:
-                source_stories = scrape_rss_posts(source, limit_per_source)
+        if not stories:
+            stories = scrape_rss_posts(source, limit)
 
-            for story in source_stories:
-                seen_urls.add(story.get("url", ""))
+        seen_urls = set()
 
-            for source_url in source_urls:
-                if len(source_stories) >= limit_per_source:
+        for story in stories:
+            seen_urls.add(story.get("url", ""))
+
+        for source_url in source_urls:
+            if len(stories) >= limit:
+                break
+
+            response = requests.get(source_url, headers=headers, timeout=15)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, "html.parser")
+
+            for link in soup.find_all("a", href=True):
+                title = link.get_text(" ", strip=True)
+                href = link.get("href", "")
+
+                if not title or len(title) < 25:
+                    continue
+
+                if href.lower().endswith(BAD_EXTENSIONS):
+                    continue
+
+                full_url = urljoin(source_url, href)
+
+                if any(keyword in full_url.lower() for keyword in BAD_KEYWORDS):
+                    continue
+
+                if full_url in seen_urls:
+                    continue
+
+                seen_urls.add(full_url)
+                stories.append(
+                    {
+                        "title": title,
+                        "summary": title,
+                        "url": full_url,
+                        "source": source,
+                        "category": "News",
+                    }
+                )
+
+                if len(stories) >= limit:
                     break
 
-                response = requests.get(source_url, headers=headers, timeout=15)
-                response.raise_for_status()
+        return {
+            "source": source,
+            "url": base_url,
+            "total_stories": len(stories),
+            "stories": stories,
+        }
+    except Exception as error:
+        return {"error": f"Failed to scrape {source}: {error}"}
 
-                soup = BeautifulSoup(response.content, "html.parser")
 
-                for link in soup.find_all("a", href=True):
-                    title = link.get_text(" ", strip=True)
-                    href = link.get("href", "")
+def scrape_all_sources(limit: int = 10) -> dict:
+    return {source: scrape_source(source, limit) for source in GHANA_SOURCES}
 
-                    if not title or len(title) < 25:
-                        continue
 
-                    if href.lower().endswith(BAD_EXTENSIONS):
-                        continue
+def search_sources(query: str, limit: int = 10) -> dict:
+    query_lower = query.lower()
+    matches = []
 
-                    full_url = urljoin(source_url, href)
+    for source in GHANA_SOURCES:
+        result = scrape_source(source, limit=20)
 
-                    if any(keyword in full_url.lower() for keyword in BAD_KEYWORDS):
-                        continue
+        if "error" in result:
+            continue
 
-                    if full_url in seen_urls:
-                        continue
+        for story in result.get("stories", []):
+            if query_lower in story.get("title", "").lower():
+                matches.append(story)
 
-                    seen_urls.add(full_url)
-                    source_stories.append(
-                        {
-                            "title": title,
-                            "summary": title,
-                            "url": full_url,
-                            "source": source,
-                            "category": "News",
-                        }
-                    )
+            if len(matches) >= limit:
+                break
 
-                    if len(source_stories) >= limit_per_source:
-                        break
+        if len(matches) >= limit:
+            break
 
-            stories.extend(source_stories[:limit_per_source])
+    return {
+        "query": query,
+        "total_results": len(matches),
+        "stories": matches,
+    }
 
-        except Exception as error:
-            print(f"Failed to scrape {source}: {error}")
+
+def scrape_news(limit_per_source: int = 10) -> list[dict]:
+    stories = []
+
+    for source in GHANA_SOURCES:
+        result = scrape_source(source, limit_per_source)
+
+        if "error" in result:
+            print(result["error"])
+            continue
+
+        stories.extend(result.get("stories", [])[:limit_per_source])
 
     return stories
 
@@ -249,6 +302,7 @@ def save_story(db, story: dict) -> str:
         "category": story.get("category", "News"),
         "url": story.get("url", ""),
         "updatedAt": firestore.SERVER_TIMESTAMP,
+        "scrapedAt": firestore.SERVER_TIMESTAMP,
     }
 
     if not snapshot.exists:
