@@ -115,15 +115,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <Text style={styles.date}>
-        {new Date().toLocaleDateString("en-GB", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}
-      </Text>
-
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <Image
@@ -140,6 +131,16 @@ export default function HomeScreen() {
               <Text style={styles.subtitle}> news, announced.</Text>
             </View>
           </View>
+        </View>
+        <View style={styles.headerMeta}>
+          <Text style={styles.date}>
+            {new Date().toLocaleDateString("en-GB", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            })}
+          </Text>
+          <Text style={styles.storyCount}>{stories.length} stories</Text>
         </View>
       </View>
 
@@ -208,7 +209,10 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Latest Stories</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Latest Stories</Text>
+        <Text style={styles.sectionMeta}>{selectedAgency}</Text>
+      </View>
 
       {loading ? (
         <ActivityIndicator size="large" style={styles.loader} />
@@ -227,9 +231,15 @@ export default function HomeScreen() {
                   <Text style={styles.category}>{item.category ?? "News"}</Text>
                   {storyDate ? <Text style={styles.storyDate}>{storyDate}</Text> : null}
                 </View>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.summary}>{item.summary ?? item.title}</Text>
-                <Text style={styles.source}>{item.source}</Text>
+                <Text style={styles.title} numberOfLines={3}>
+                  {item.title}
+                </Text>
+                <Text style={styles.summary} numberOfLines={2}>
+                  {item.summary ?? item.title}
+                </Text>
+                <View style={styles.sourceRow}>
+                  <Text style={styles.source}>{item.source}</Text>
+                </View>
               </>
             );
 
@@ -275,27 +285,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
   },
   header: {
-    paddingTop: 10,
-    paddingBottom: 14,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 10,
+    paddingTop: 8,
+    gap: 12,
   },
   date: {
-    color: Colors.textMuted,
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 4,
-    marginTop: 8,
+    color: Colors.textSoft,
+    fontSize: 12,
+    fontWeight: "800",
   },
   logo: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: Colors.text,
+    color: Colors.textStrong,
+    fontSize: 28,
+    fontWeight: "900",
   },
   subtitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 16,
     color: Colors.textMuted,
   },
   subtitleRow: {
@@ -304,32 +316,47 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   ghanaWordmark: {
-    height: 19,
-    width: 64,
+    height: 15,
+    width: 52,
     marginBottom: 1,
     resizeMode: "contain",
+  },
+  headerMeta: {
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  storyCount: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.borderMuted,
+    borderRadius: 8,
+    borderWidth: 1,
+    color: Colors.textStrong,
+    fontSize: 12,
+    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surfaceMuted,
-    borderRadius: 14,
-    padding: 5,
+    backgroundColor: Colors.surface,
+    borderRadius: 8,
+    padding: 4,
     borderWidth: 1,
-    borderColor: Colors.borderMuted,
+    borderColor: Colors.border,
   },
   searchInput: {
     flex: 1,
-    paddingHorizontal: 12,
-    minHeight: 42,
+    paddingHorizontal: 10,
+    minHeight: 40,
     fontSize: 15,
     color: Colors.text,
   },
   searchButton: {
     backgroundColor: Colors.brand.green,
-    borderRadius: 10,
-    minHeight: 42,
-    minWidth: 54,
+    borderRadius: 7,
+    minHeight: 40,
+    minWidth: 50,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -340,28 +367,39 @@ const styles = StyleSheet.create({
   controls: {
     backgroundColor: Colors.surface,
     borderColor: Colors.border,
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 16,
-    padding: 10,
+    marginBottom: 12,
+    padding: 8,
+  },
+  sectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: Colors.text,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: "900",
+    color: Colors.textStrong,
+  },
+  sectionMeta: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase",
   },
   loader: {
     marginTop: 40,
   },
   list: {
-    paddingBottom: 30,
+    paddingBottom: 22,
   },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 8,
+    padding: 13,
+    marginBottom: 9,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -385,8 +423,8 @@ const styles = StyleSheet.create({
   category: {
     color: Colors.brand.red,
     flexShrink: 1,
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "900",
     textTransform: "uppercase",
   },
   cardMetaRow: {
@@ -394,29 +432,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
-    marginBottom: 8,
+    marginBottom: 7,
   },
   storyDate: {
     color: Colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "800",
   },
   title: {
-    color: Colors.text,
-    fontSize: 17,
-    fontWeight: "700",
-    lineHeight: 24,
+    color: Colors.textStrong,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 22,
   },
   summary: {
     color: Colors.summary,
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 6,
+  },
+  sourceRow: {
+    alignItems: "flex-start",
+    marginTop: 9,
   },
   source: {
+    backgroundColor: Colors.surfaceMuted,
+    borderRadius: 6,
     color: Colors.brand.green,
-    fontWeight: "700",
-    marginTop: 12,
+    fontSize: 11,
+    fontWeight: "900",
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    textTransform: "uppercase",
   },
   emptyText: {
     color: Colors.textMuted,
@@ -425,13 +473,13 @@ const styles = StyleSheet.create({
   },
 
   topicSection: {
-    marginTop: 12,
+    marginTop: 10,
   },
   topicTitle: {
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "900",
     color: Colors.textMuted,
-    marginBottom: 8,
+    marginBottom: 7,
     marginTop: 6,
     textTransform: "uppercase",
   },
@@ -441,28 +489,20 @@ const styles = StyleSheet.create({
     paddingRight: 2,
   },
   topicChip: {
-    backgroundColor: Colors.brand.gold,
-    borderRadius: 999,
-    minHeight: 28,
-    overflow: "hidden",
-    paddingVertical: 6,
-    paddingHorizontal: 11,
+    backgroundColor: Colors.surfaceMuted,
+    borderRadius: 8,
+    minHeight: 30,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: Colors.topicGoldBorder,
+    borderColor: Colors.borderMuted,
   },
   topicChipGloss: {
-    backgroundColor: "rgba(255, 255, 255, 0.38)",
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
-    height: "48%",
-    left: 1,
-    position: "absolute",
-    right: 1,
-    top: 1,
+    display: "none",
   },
   topicChipText: {
     color: Colors.text,
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 12,
   },
   selectedTopicChip: {
@@ -475,12 +515,13 @@ const styles = StyleSheet.create({
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 9,
+    flex: 1,
   },
   logoImage: {
-    width: 109,
-    height: 109,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     resizeMode: "contain",
   },
 });

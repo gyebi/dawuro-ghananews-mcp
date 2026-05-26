@@ -24,9 +24,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
-          height: 64 + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 12),
-          paddingTop: 8,
+          height: 58 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 9),
+          paddingTop: 6,
         },
       }}
     >
@@ -122,12 +122,12 @@ function StoryHeader() {
 const styles = StyleSheet.create({
   storyHeader: {
     alignItems: "center",
-    backgroundColor: Colors.surfaceCool,
+    backgroundColor: Colors.surface,
     borderBottomColor: Colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
-    minHeight: 86,
-    paddingBottom: 14,
+    minHeight: 78,
+    paddingBottom: 12,
     paddingHorizontal: 16,
   },
   backButton: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   storyHeaderTitle: {
     color: Colors.textStrong,
     flex: 1,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "900",
     textAlign: "center",
   },

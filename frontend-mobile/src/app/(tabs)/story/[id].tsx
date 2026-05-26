@@ -187,9 +187,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceCool,
   },
   content: {
-    paddingHorizontal: 22,
-    paddingTop: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 32,
   },
   loading: {
     padding: 22,
@@ -197,35 +197,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   category: {
-    color: Colors.brand.gold,
-    fontSize: 13,
+    color: Colors.brand.red,
+    fontSize: 12,
     fontWeight: "900",
     textTransform: "uppercase",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   title: {
     color: Colors.textStrong,
-    fontSize: 30,
-    lineHeight: 38,
+    fontSize: 27,
+    lineHeight: 34,
     fontWeight: "900",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   source: {
     color: Colors.textSoft,
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 24,
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 18,
+    textTransform: "uppercase",
   },
   summary: {
     color: Colors.body,
-    fontSize: 18,
-    lineHeight: 29,
+    fontSize: 17,
+    lineHeight: 27,
   },
   button: {
     backgroundColor: Colors.textStrong,
-    padding: 16,
-    borderRadius: 16,
-    marginTop: 28,
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 18,
     alignItems: "center",
   },
   buttonText: {
@@ -236,9 +237,9 @@ const styles = StyleSheet.create({
 
   saveButton: {
     backgroundColor: Colors.brand.gold,
-    padding: 16,
-    borderRadius: 16,
-    marginTop: 28,
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 22,
     alignItems: "center",
   },
   saveButtonText: {
@@ -250,8 +251,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderColor: Colors.borderCool,
     borderWidth: 1,
-    padding: 14,
-    borderRadius: 16,
+    padding: 12,
+    borderRadius: 8,
     marginTop: 12,
   },
   shareTitle: {
@@ -269,11 +270,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: Colors.surfaceCool,
     borderColor: Colors.borderCool,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1,
-    height: 48,
+    height: 44,
     justifyContent: "center",
-    width: 48,
+    width: 44,
   },
 
   aiSection: {
@@ -282,8 +283,8 @@ const styles = StyleSheet.create({
   aiButton: {
     alignItems: "center",
     backgroundColor: Colors.brand.green,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 8,
+    padding: 15,
   },
   aiButtonText: {
     color: Colors.white,
@@ -293,10 +294,10 @@ const styles = StyleSheet.create({
   aiSummary: {
     backgroundColor: Colors.surface,
     borderColor: Colors.borderCool,
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     marginTop: 12,
-    padding: 14,
+    padding: 12,
   },
   aiSummaryTitle: {
     color: Colors.textStrong,
