@@ -21,6 +21,13 @@ def _topic_id(user_id: str, topic: str) -> str:
     return hashlib.sha256(unique_text.encode("utf-8")).hexdigest()
 
 
+def _timestamp_sort_value(value: Any) -> float:
+    if hasattr(value, "timestamp"):
+        return value.timestamp()
+
+    return 0
+
+
 class TopicService:
     def __init__(self, db=None, collection_name: str = TRACKED_TOPICS_COLLECTION):
         self.db = db or get_db()
@@ -61,16 +68,24 @@ class TopicService:
         snapshots = (
             self._collection()
             .where("userId", "==", user_id)
-            .order_by("updatedAt", direction=firestore.Query.DESCENDING)
             .stream()
         )
-        return [
+
+        topics = [
             {
                 "id": snapshot.id,
                 **(snapshot.to_dict() or {}),
             }
             for snapshot in snapshots
         ]
+
+        return sorted(
+            topics,
+            key=lambda topic: _timestamp_sort_value(
+                topic.get("updatedAt") or topic.get("createdAt")
+            ),
+            reverse=True,
+        )
 
     def remove_tracked_topic(self, topic_id: str) -> dict[str, Any]:
         topic_ref = self._collection().document(topic_id)

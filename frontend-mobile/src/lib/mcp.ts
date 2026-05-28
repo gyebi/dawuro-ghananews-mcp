@@ -1,4 +1,5 @@
 const mcpBridgeUrl = process.env.EXPO_PUBLIC_MCP_BRIDGE_URL?.replace(/\/$/, "");
+const mcpBridgeToken = process.env.EXPO_PUBLIC_MCP_BRIDGE_TOKEN;
 
 type McpToolArguments = Record<string, unknown>;
 
@@ -56,6 +57,37 @@ export type TrendingTopic = {
   sources: string[];
 };
 
+export type TrackedTopic = {
+  id: string;
+  topic: string;
+  displayTopic?: string;
+  userId?: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
+
+export type TrackTopicResult = {
+  status: string;
+  topicId?: string;
+  topic?: string;
+  userId?: string;
+  message?: string;
+};
+
+export type PersonalizedBriefingSection = {
+  topicId?: string;
+  topic: string;
+  storyCount?: number;
+  stories: ArticleSummary[];
+};
+
+export type PersonalizedBriefing = {
+  userId: string;
+  trackedTopicCount: number;
+  message?: string;
+  sections: PersonalizedBriefingSection[];
+};
+
 export function isMcpBridgeConfigured() {
   return Boolean(mcpBridgeUrl);
 }
@@ -80,11 +112,17 @@ export async function callMcpTool<T>(
     throw new Error("MCP bridge URL is not configured.");
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (mcpBridgeToken) {
+    headers.Authorization = `Bearer ${mcpBridgeToken}`;
+  }
+
   const response = await fetch(`${mcpBridgeUrl}/tools/${toolName}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       tool: toolName,
       arguments: args,
@@ -92,7 +130,24 @@ export async function callMcpTool<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`MCP tool call failed with status ${response.status}.`);
+    let errorMessage = `MCP tool call failed with status ${response.status}.`;
+
+    try {
+      const errorPayload = await response.json();
+
+      if (
+        errorPayload &&
+        typeof errorPayload === "object" &&
+        "error" in errorPayload &&
+        typeof errorPayload.error === "string"
+      ) {
+        errorMessage = errorPayload.error;
+      }
+    } catch {
+      // Keep the status-based error when the bridge does not return JSON.
+    }
+
+    throw new Error(errorMessage);
   }
 
   return normalizeMcpResponse<T>(await response.json());
@@ -142,6 +197,29 @@ export function createMorningBriefing(limit = 20) {
 export function getNewsTrendingTopics(limit = 10) {
   return callMcpTool<TrendingTopic[]>("get_news_trending_topics", {
     limit,
+    collection_name: "stories",
+  });
+}
+
+export function trackNewsTopic(topic: string) {
+  return callMcpTool<TrackTopicResult>("track_news_topic", {
+    topic,
+  });
+}
+
+export function getTrackedNewsTopics() {
+  return callMcpTool<TrackedTopic[]>("get_tracked_news_topics");
+}
+
+export function removeTrackedNewsTopic(topicId: string) {
+  return callMcpTool<TrackTopicResult>("remove_tracked_news_topic", {
+    topic_id: topicId,
+  });
+}
+
+export function getPersonalizedNewsBriefing(perTopicLimit = 5) {
+  return callMcpTool<PersonalizedBriefing>("get_personalized_news_briefing", {
+    per_topic_limit: perTopicLimit,
     collection_name: "stories",
   });
 }

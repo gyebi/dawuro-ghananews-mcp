@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,13 +13,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 import {
   createMorningBriefing,
+  getPersonalizedNewsBriefing,
+  getTrackedNewsTopics,
   getNewsTrendingTopics,
   isMcpBridgeConfigured,
+  removeTrackedNewsTopic,
+  trackNewsTopic,
   type MorningBriefing,
+  type PersonalizedBriefing,
+  type TrackedTopic,
   type TrendingTopic,
 } from "@/lib/mcp";
 
 export default function RefreshScreen() {
+  const [topicInput, setTopicInput] = useState("");
+  const [trackedTopics, setTrackedTopics] = useState<TrackedTopic[] | null>(null);
+  const [personalizedBriefing, setPersonalizedBriefing] =
+    useState<PersonalizedBriefing | null>(null);
   const [briefing, setBriefing] = useState<MorningBriefing | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[] | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
@@ -44,25 +55,98 @@ export default function RefreshScreen() {
             </Text>
           </View>
         ) : (
-          <View style={styles.actions}>
-            <Pressable
-              style={styles.actionButton}
-              onPress={loadMorningBriefing}
-              disabled={Boolean(loading)}
-            >
-              <Text style={styles.actionButtonText}>Morning Briefing</Text>
-            </Pressable>
-            <Pressable
-              style={styles.actionButtonSecondary}
-              onPress={loadTrendingTopics}
-              disabled={Boolean(loading)}
-            >
-              <Text style={styles.actionButtonSecondaryText}>Trending Topics</Text>
-            </Pressable>
+          <View>
+            <View style={styles.topicTracker}>
+              <View style={styles.panelHeader}>
+                <Text style={styles.panelTitle}>Tracked Topics</Text>
+                <Pressable onPress={loadTrackedTopics} disabled={Boolean(loading)}>
+                  <Text style={styles.inlineActionText}>
+                    {loading === "topics" ? "..." : "Load"}
+                  </Text>
+                </Pressable>
+              </View>
+              <View style={styles.topicInputRow}>
+                <TextInput
+                  value={topicInput}
+                  onChangeText={setTopicInput}
+                  placeholder="Track cedi, cocoa prices, SHS..."
+                  placeholderTextColor={Colors.textMuted}
+                  returnKeyType="done"
+                  onSubmitEditing={handleTrackTopic}
+                  style={styles.topicInput}
+                />
+                <Pressable
+                  style={styles.trackButton}
+                  onPress={handleTrackTopic}
+                  disabled={Boolean(loading)}
+                >
+                  <Text style={styles.trackButtonText}>
+                    {loading === "track" ? "..." : "Track"}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.actions}>
+              <Pressable
+                style={styles.actionButton}
+                onPress={loadMorningBriefing}
+                disabled={Boolean(loading)}
+              >
+                <Text style={styles.actionButtonText}>Morning Briefing</Text>
+              </Pressable>
+              <Pressable
+                style={styles.actionButtonSecondary}
+                onPress={loadPersonalizedBriefing}
+                disabled={Boolean(loading)}
+              >
+                <Text style={styles.actionButtonSecondaryText}>For You</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.actions}>
+              <Pressable
+                style={styles.actionButtonSecondary}
+                onPress={loadTrendingTopics}
+                disabled={Boolean(loading)}
+              >
+                <Text style={styles.actionButtonSecondaryText}>Trending Topics</Text>
+              </Pressable>
+            </View>
           </View>
         )}
 
         {loading ? <ActivityIndicator style={styles.loader} /> : null}
+
+        {trackedTopics ? (
+          <View style={styles.panel}>
+            <View style={styles.panelHeader}>
+              <Text style={styles.panelTitle}>Tracked Topics</Text>
+              <Text style={styles.panelMeta}>{trackedTopics.length} topics</Text>
+            </View>
+            {trackedTopics.length ? (
+              <View style={styles.trackedTopicList}>
+                {trackedTopics.map((topic) => (
+                  <View key={topic.id} style={styles.trackedTopicRow}>
+                    <Text style={styles.trackedTopicName}>
+                      {topic.displayTopic || topic.topic}
+                    </Text>
+                    <Pressable
+                      onPress={() => handleRemoveTrackedTopic(topic.id)}
+                      disabled={Boolean(loading)}
+                    >
+                      <Text style={styles.removeTopicText}>
+                        {loading === topic.id ? "..." : "Remove"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyPanelText}>No tracked topics yet.</Text>
+            )}
+          </View>
+        ) : null}
 
         {briefing ? (
           <View style={styles.panel}>
@@ -75,6 +159,39 @@ export default function RefreshScreen() {
                 <Text style={styles.sectionTitle}>{section.category}</Text>
                 {section.stories.map((story) => (
                   <View key={`${section.category}-${story.title}`} style={styles.storyRow}>
+                    <Text style={styles.storyTitle}>{story.title}</Text>
+                    <Text style={styles.storySummary} numberOfLines={2}>
+                      {story.summary}
+                    </Text>
+                    <Text style={styles.storySource}>{story.source}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {personalizedBriefing ? (
+          <View style={styles.panel}>
+            <View style={styles.panelHeader}>
+              <Text style={styles.panelTitle}>For You</Text>
+              <Text style={styles.panelMeta}>
+                {personalizedBriefing.trackedTopicCount} tracked
+              </Text>
+            </View>
+            {personalizedBriefing.message ? (
+              <Text style={styles.emptyPanelText}>{personalizedBriefing.message}</Text>
+            ) : null}
+            {personalizedBriefing.sections.map((section) => (
+              <View key={section.topicId || section.topic} style={styles.section}>
+                <Text style={styles.sectionTitle}>
+                  {section.topic}
+                  {typeof section.storyCount === "number"
+                    ? ` · ${section.storyCount} stories`
+                    : ""}
+                </Text>
+                {section.stories.map((story) => (
+                  <View key={`${section.topic}-${story.title}`} style={styles.storyRow}>
                     <Text style={styles.storyTitle}>{story.title}</Text>
                     <Text style={styles.storySummary} numberOfLines={2}>
                       {story.summary}
@@ -115,7 +232,7 @@ export default function RefreshScreen() {
       setBriefing(await createMorningBriefing());
     } catch (error) {
       console.log("Morning briefing error:", error);
-      alert("Could not create morning briefing.");
+      alert(getErrorMessage(error, "Could not create morning briefing."));
     } finally {
       setLoading(null);
     }
@@ -127,11 +244,74 @@ export default function RefreshScreen() {
       setTrendingTopics(await getNewsTrendingTopics());
     } catch (error) {
       console.log("Trending topics error:", error);
-      alert("Could not load trending topics.");
+      alert(getErrorMessage(error, "Could not load trending topics."));
     } finally {
       setLoading(null);
     }
   }
+
+  async function loadPersonalizedBriefing() {
+    try {
+      setLoading("personalized");
+      setPersonalizedBriefing(await getPersonalizedNewsBriefing());
+    } catch (error) {
+      console.log("Personalized briefing error:", error);
+      alert(getErrorMessage(error, "Could not create personalized briefing."));
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function loadTrackedTopics() {
+    try {
+      setLoading("topics");
+      setTrackedTopics(await getTrackedNewsTopics());
+    } catch (error) {
+      console.log("Tracked topics error:", error);
+      alert(getErrorMessage(error, "Could not load tracked topics."));
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleTrackTopic() {
+    const topic = topicInput.trim();
+
+    if (!topic || loading) return;
+
+    try {
+      setLoading("track");
+      await trackNewsTopic(topic);
+      setTopicInput("");
+      setTrackedTopics(await getTrackedNewsTopics());
+    } catch (error) {
+      console.log("Track topic error:", error);
+      alert(getErrorMessage(error, "Could not track topic."));
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleRemoveTrackedTopic(topicId: string) {
+    if (loading) return;
+
+    try {
+      setLoading(topicId);
+      await removeTrackedNewsTopic(topicId);
+      setTrackedTopics((topics) =>
+        topics ? topics.filter((topic) => topic.id !== topicId) : topics
+      );
+    } catch (error) {
+      console.log("Remove tracked topic error:", error);
+      alert(getErrorMessage(error, "Could not remove tracked topic."));
+    } finally {
+      setLoading(null);
+    }
+  }
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 const styles = StyleSheet.create({
@@ -186,6 +366,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginBottom: 14,
+  },
+  topicTracker: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+    padding: 12,
+  },
+  topicInputRow: {
+    alignItems: "center",
+    backgroundColor: Colors.surfaceMuted,
+    borderColor: Colors.borderMuted,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginTop: 10,
+    padding: 4,
+  },
+  topicInput: {
+    color: Colors.text,
+    flex: 1,
+    fontSize: 14,
+    minHeight: 42,
+    paddingHorizontal: 10,
+  },
+  trackButton: {
+    alignItems: "center",
+    backgroundColor: Colors.brand.green,
+    borderRadius: 7,
+    justifyContent: "center",
+    minHeight: 40,
+    minWidth: 70,
+  },
+  trackButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  inlineActionText: {
+    color: Colors.brand.green,
+    fontSize: 12,
+    fontWeight: "900",
+    paddingLeft: 10,
+    textTransform: "uppercase",
   },
   actionButton: {
     alignItems: "center",
@@ -242,6 +467,37 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
     fontWeight: "800",
+  },
+  emptyPanelText: {
+    color: Colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    paddingTop: 12,
+  },
+  trackedTopicList: {
+    paddingTop: 10,
+  },
+  trackedTopicRow: {
+    alignItems: "center",
+    borderTopColor: Colors.borderMuted,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 46,
+    gap: 12,
+  },
+  trackedTopicName: {
+    color: Colors.textStrong,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "900",
+    textTransform: "capitalize",
+  },
+  removeTopicText: {
+    color: Colors.brand.red,
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase",
   },
   section: {
     paddingTop: 12,

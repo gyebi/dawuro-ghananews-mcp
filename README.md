@@ -165,7 +165,82 @@ The mobile app keeps reading the production feed directly from Firestore. AI act
 EXPO_PUBLIC_MCP_BRIDGE_URL=https://your-mcp-bridge.example.com
 ```
 
-The first wired frontend action is article summarization on the story detail screen. If `EXPO_PUBLIC_MCP_BRIDGE_URL` is not set, the app hides the MCP-powered action and continues working as a normal Firestore news app.
+For local testing, run the lightweight HTTP bridge from `backend-mobile`:
+
+```bash
+uv run python mcp_http_bridge.py --host 0.0.0.0 --port 8787
+```
+
+Then point the Expo app at it:
+
+```text
+EXPO_PUBLIC_MCP_BRIDGE_URL=http://localhost:8787
+```
+
+If testing on a physical phone, use your computer's LAN IP address instead of `localhost`.
+
+The bridge exposes MCP tools at:
+
+```text
+GET /health
+GET /tools
+POST /tools/<tool_name>
+```
+
+with a JSON body like:
+
+```json
+{
+  "arguments": {
+    "article_id": "story-document-id",
+    "collection_name": "stories"
+  }
+}
+```
+
+Set `MCP_BRIDGE_TOKEN` in the bridge environment to require `Authorization: Bearer <token>` on tool calls.
+Set the same value as `EXPO_PUBLIC_MCP_BRIDGE_TOKEN` in the mobile app environment when token protection is enabled.
+
+If `EXPO_PUBLIC_MCP_BRIDGE_URL` is not set, the app hides MCP-powered actions and continues working as a normal Firestore news app.
+
+Smoke test a local bridge with:
+
+```bash
+python scripts/smoke_mcp_bridge.py --url http://127.0.0.1:8787
+```
+
+If token protection is enabled:
+
+```bash
+python scripts/smoke_mcp_bridge.py --url http://127.0.0.1:8787 --token <token>
+```
+
+### Bridge Deployment
+
+The bridge can be deployed as a container from `backend-mobile/Dockerfile`. For Cloud Run, build and deploy from `backend-mobile`:
+
+```bash
+gcloud run deploy dawuro-mcp-bridge \
+  --source . \
+  --region <region> \
+  --allow-unauthenticated \
+  --set-secrets MCP_BRIDGE_TOKEN=dawuro-mcp-bridge-token:latest,FIREBASE_SERVICE_ACCOUNT_JSON=dawuro-firebase-service-account-json:latest
+```
+
+Cloud Run supplies the `PORT` environment variable automatically, and the bridge now reads it. After deployment, set the mobile app environment to the Cloud Run URL:
+
+```text
+EXPO_PUBLIC_MCP_BRIDGE_URL=https://<cloud-run-service-url>
+EXPO_PUBLIC_MCP_BRIDGE_TOKEN=<token>
+```
+
+Do not copy `firebase-service-account.json` into the container image. The Docker build excludes it; use `FIREBASE_SERVICE_ACCOUNT_JSON` or a platform secret instead.
+
+Smoke test the deployed bridge before wiring it into the app:
+
+```bash
+python scripts/smoke_mcp_bridge.py --url https://<cloud-run-service-url> --token <token>
+```
 
 ## MCP Prompts
 

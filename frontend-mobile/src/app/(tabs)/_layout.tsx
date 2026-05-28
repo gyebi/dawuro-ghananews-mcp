@@ -1,4 +1,3 @@
-import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Tabs } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -42,8 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="refresh"
         options={{
-          title: "Refresh",
-          tabBarButton: RefreshTabButton,
+          title: "AI Desk",
           tabBarIcon: ({ color }) => <RefreshIcon color={color} size={24} />,
         }}
       />
@@ -73,35 +71,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-  );
-}
-
-function RefreshTabButton(props: BottomTabBarButtonProps) {
-  const {
-    accessibilityLabel,
-    accessibilityState,
-    children,
-    onLongPress,
-    style,
-    testID,
-  } = props;
-
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={accessibilityState}
-      onLongPress={onLongPress}
-      onPress={() =>
-        router.replace({
-          pathname: "/",
-          params: { refresh: Date.now().toString() },
-        })
-      }
-      style={style}
-      testID={testID}
-    >
-      {children}
-    </Pressable>
   );
 }
 

@@ -1,0 +1,14 @@
+.venv/
+venv/
+functions/venv/
+__pycache__/
+*/__pycache__/
+*.pyc
+*.pyo
+*.log
+.git/
+.gitignore
+.firebaserc
+firebase-debug.log
+firebase-service-account.json
+functions/.gitignore
